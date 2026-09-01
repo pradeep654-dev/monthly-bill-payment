@@ -31,15 +31,15 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#06090F] text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-emerald-500/20 dark:selection:bg-orange-500/20">
-      {/* App Shell Container */}
-      <div className="w-full max-w-md mx-auto bg-slate-50 dark:bg-[#090D16] min-h-screen flex flex-col shadow-2xl relative border-x border-slate-200/50 dark:border-slate-800/40">
+    <div className="h-screen h-[100dvh] w-full bg-slate-100 dark:bg-[#06090F] text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-emerald-500/20 dark:selection:bg-orange-500/20 overflow-hidden">
+      {/* Mobile Shell Container */}
+      <div className="w-full max-w-md mx-auto bg-slate-50 dark:bg-[#090D16] h-full flex flex-col shadow-2xl relative border-x border-slate-200/50 dark:border-slate-800/40 overflow-hidden">
         
         {/* Fixed Header */}
         <Header />
 
-        {/* Dynamic View Body */}
-        <main className="flex-1 px-4 pt-4 pb-28 space-y-4 overflow-y-auto">
+        {/* Dynamic View Scrollable Body */}
+        <main className="flex-1 px-4 pt-4 pb-28 space-y-4 overflow-y-auto overscroll-contain">
           {activeTab === 'home' && (
             <>
               <OverviewCard />
@@ -58,7 +58,7 @@ const MainContent: React.FC = () => {
           {activeTab === 'settings' && <SettingsView />}
         </main>
 
-        {/* Fixed Bottom Nav */}
+        {/* Permanently Sticky Bottom Nav Bar */}
         <NavBar />
 
         {/* Modal for Add / Edit */}

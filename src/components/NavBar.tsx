@@ -6,37 +6,36 @@ import type { ActiveTab } from '../types';
 export const NavBar: React.FC = () => {
   const { activeTab, setActiveTab } = usePayments();
 
-  const tabs: { id: ActiveTab; label: string; icon: React.ElementType }[] = [
+  const navItems: { id: ActiveTab; label: string; icon: typeof Home }[] = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'history', label: 'History', icon: History },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#090D16]/95 backdrop-blur-lg border-t border-slate-200/60 dark:border-slate-800/80 pb-safe transition-colors duration-200">
-      <div className="max-w-md mx-auto px-6 h-16 flex items-center justify-between">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+    <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none pb-safe">
+      <div className="max-w-md mx-auto px-4 pb-2">
+        <div className="pointer-events-auto backdrop-blur-lg bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-1.5 shadow-2xl flex items-center justify-around">
+          {navItems.map(item => {
+            const IconComp = item.icon;
+            const isActive = activeTab === item.id;
 
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex flex-col items-center justify-center h-full py-1 transition-all duration-200 relative ${
-                isActive
-                  ? 'text-emerald-600 dark:text-orange-500 font-bold scale-105'
-                  : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-medium'
-              }`}
-            >
-              <Icon className="w-5 h-5 stroke-[2.2] mb-1" />
-              <span className="text-[11px] tracking-tight">{tab.label}</span>
-              {isActive && (
-                <span className="absolute top-1.5 w-1 h-1 rounded-full bg-emerald-500 dark:bg-orange-500" />
-              )}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex-1 py-2 px-3 rounded-xl flex flex-col items-center justify-center space-y-1 transition-all active:scale-95 ${
+                  isActive
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:bg-orange-500/15 dark:text-orange-400 font-bold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <IconComp className={`w-5 h-5 ${isActive ? 'stroke-[2.2]' : 'stroke-[1.8]'}`} />
+                <span className="text-xs leading-none">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
