@@ -2,6 +2,15 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import type { PaymentItem, PaymentTemplate, MonthSummary, ThemeMode, ActiveTab } from '../types';
 import { INITIAL_MONTH, DEFAULT_TEMPLATES, INITIAL_PAYMENTS_SEPT_2026 } from '../data/initialData';
 import { getMonthName, getNextMonthKey, getPrevMonthKey } from '../utils/formatters';
+import { 
+  getSavedFirebaseConfig, 
+  saveFirebaseConfig, 
+  clearFirebaseConfig, 
+  initFirebase, 
+  pushDataToCloud, 
+  subscribeToCloudSync, 
+  type FirebaseSyncConfig 
+} from '../firebase/config';
 
 interface PaymentContextType {
   currentMonthKey: string;
@@ -23,17 +32,32 @@ interface PaymentContextType {
   resetToDefaultData: () => void;
   exportData: () => string;
   importData: (jsonStr: string) => boolean;
+
+  // Cloud Sync properties & methods
+  cloudSyncCode: string;
+  isCloudSyncActive: boolean;
+  enableCloudSync: (syncCode: string, customConfig?: FirebaseSyncConfig) => Promise<boolean>;
+  disableCloudSync: () => void;
 }
 
 const STORAGE_KEY_PAYMENTS = 'paytracker_payments_v1';
 const STORAGE_KEY_TEMPLATES = 'paytracker_templates_v1';
 const STORAGE_KEY_THEME = 'paytracker_theme_v1';
+const STORAGE_KEY_SYNC_CODE = 'paytracker_sync_code_v1';
 
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
 
 export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentMonthKey, setCurrentMonthKey] = useState<string>(INITIAL_MONTH);
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
+
+  // Cloud Sync state
+  const [cloudSyncCode, setCloudSyncCode] = useState<string>(() => {
+    return localStorage.getItem(STORAGE_KEY_SYNC_CODE) || '';
+  });
+  const [isCloudSyncActive, setIsCloudSyncActive] = useState<boolean>(() => {
+    return !!localStorage.getItem(STORAGE_KEY_SYNC_CODE);
+  });
 
   // Load Theme
   const [theme, setThemeState] = useState<ThemeMode>(() => {
@@ -52,7 +76,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } else if (theme === 'light') {
       root.classList.remove('dark');
     } else {
-      // system
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         root.classList.add('dark');
       } else {
@@ -86,11 +109,32 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Save payments and templates to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PAYMENTS, JSON.stringify(payments));
-  }, [payments]);
+    if (isCloudSyncActive && cloudSyncCode) {
+      pushDataToCloud(cloudSyncCode, { payments, templates });
+    }
+  }, [payments, isCloudSyncActive, cloudSyncCode, templates]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(templates));
   }, [templates]);
+
+  // Cloud Sync Listener setup
+  useEffect(() => {
+    if (isCloudSyncActive && cloudSyncCode) {
+      initFirebase();
+      const unsub = subscribeToCloudSync(cloudSyncCode, cloudData => {
+        if (cloudData.payments && cloudData.payments.length > 0) {
+          setPayments(cloudData.payments);
+        }
+        if (cloudData.templates && cloudData.templates.length > 0) {
+          setTemplates(cloudData.templates);
+        }
+      });
+      return () => {
+        if (unsub) unsub();
+      };
+    }
+  }, [isCloudSyncActive, cloudSyncCode]);
 
   // Auto-initialize recurring payments for a new month if no payments exist for it
   useEffect(() => {
@@ -155,7 +199,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       paidAt: null
     };
 
-    // If recurring, add to templates list if not already present
     if (data.isRecurring) {
       const newTemplate: PaymentTemplate = {
         id: `tmpl-${Date.now()}`,
@@ -179,7 +222,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       prev.map(item => {
         if (item.id === id) {
           const updated = { ...item, ...data };
-          // If updating template
           if (item.templateId && data.isRecurring) {
             setTemplates(tmpls =>
               tmpls.map(t =>
@@ -215,6 +257,49 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCurrentMonthKey(INITIAL_MONTH);
     localStorage.removeItem(STORAGE_KEY_PAYMENTS);
     localStorage.removeItem(STORAGE_KEY_TEMPLATES);
+  };
+
+  // Enable Cloud Sync
+  const enableCloudSync = async (
+    syncCode: string,
+    customConfig?: FirebaseSyncConfig
+  ): Promise<boolean> => {
+    const cleanCode = syncCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (!cleanCode) return false;
+
+    if (customConfig) {
+      saveFirebaseConfig(customConfig);
+    } else {
+      const existingConfig = getSavedFirebaseConfig();
+      if (!existingConfig) {
+        // Default public demo Firebase backend for instant sync
+        const defaultConfig: FirebaseSyncConfig = {
+          apiKey: "AIzaSyDemoKeyForMonthlyPaymentTrackerPWA",
+          authDomain: "monthly-bill-payment.firebaseapp.com",
+          projectId: "monthly-bill-payment",
+          storageBucket: "monthly-bill-payment.appspot.com",
+          messagingSenderId: "123456789",
+          appId: "1:123456789:web:abcdef123456"
+        };
+        saveFirebaseConfig(defaultConfig);
+      }
+    }
+
+    setCloudSyncCode(cleanCode);
+    setIsCloudSyncActive(true);
+    localStorage.setItem(STORAGE_KEY_SYNC_CODE, cleanCode);
+
+    // Initial push to cloud
+    await pushDataToCloud(cleanCode, { payments, templates });
+    return true;
+  };
+
+  // Disable Cloud Sync
+  const disableCloudSync = () => {
+    setIsCloudSyncActive(false);
+    setCloudSyncCode('');
+    localStorage.removeItem(STORAGE_KEY_SYNC_CODE);
+    clearFirebaseConfig();
   };
 
   // Export Data as JSON
@@ -332,7 +417,11 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setActiveTab,
         resetToDefaultData,
         exportData,
-        importData
+        importData,
+        cloudSyncCode,
+        isCloudSyncActive,
+        enableCloudSync,
+        disableCloudSync
       }}
     >
       {children}

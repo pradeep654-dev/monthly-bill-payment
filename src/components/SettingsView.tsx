@@ -10,13 +10,30 @@ import {
   Smartphone, 
   Share, 
   PlusSquare, 
-  Check 
+  Check,
+  Cloud,
+  RefreshCw,
+  Key,
+  WifiOff
 } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 
 export const SettingsView: React.FC = () => {
-  const { theme, setTheme, resetToDefaultData, exportData, importData } = usePayments();
+  const { 
+    theme, 
+    setTheme, 
+    resetToDefaultData, 
+    exportData, 
+    importData,
+    cloudSyncCode,
+    isCloudSyncActive,
+    enableCloudSync,
+    disableCloudSync
+  } = usePayments();
+
   const [importMessage, setImportMessage] = useState<{ text: string; success: boolean } | null>(null);
+  const [syncKeyInput, setSyncKeyInput] = useState('');
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // BeforeInstallPromptEvent for Android / Chrome
@@ -93,6 +110,20 @@ export const SettingsView: React.FC = () => {
     }
   };
 
+  const handleEnableSync = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!syncKeyInput.trim()) {
+      setSyncMessage('Please enter a private Sync Key (e.g. pradeep-bills-2026)');
+      return;
+    }
+    const success = await enableCloudSync(syncKeyInput.trim());
+    if (success) {
+      setSyncMessage('Cloud Sync active! Use this same Sync Key on your other devices.');
+    } else {
+      setSyncMessage('Failed to activate Cloud Sync. Please check network.');
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in pb-8">
       {/* Header */}
@@ -101,7 +132,7 @@ export const SettingsView: React.FC = () => {
           Settings
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Customize theme, backup local data, and install app on your device
+          Customize theme, backup local data, and enable multi-device sync
         </p>
       </div>
 
@@ -151,6 +182,83 @@ export const SettingsView: React.FC = () => {
             <span className="text-[10px] text-slate-400 font-normal mt-0.5">Auto Match</span>
           </button>
         </div>
+      </div>
+
+      {/* Cloud Sync (Multi-Device) Section */}
+      <div className="bg-white dark:bg-[#161B26] border border-slate-100 dark:border-slate-800/80 rounded-3xl p-5 shadow-xs space-y-3">
+        <div className="flex items-center space-x-2.5">
+          <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+            <Cloud className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              Real-Time Multi-Device Cloud Sync
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Sync bills live across your iPhone, iPad, Mac, and PC
+            </p>
+          </div>
+        </div>
+
+        {syncMessage && (
+          <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-semibold">
+            {syncMessage}
+          </div>
+        )}
+
+        {isCloudSyncActive ? (
+          <div className="space-y-3 pt-1">
+            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400">
+              <div className="flex items-center space-x-2">
+                <Check className="w-4 h-4 shrink-0" />
+                <span>Cloud Sync Active</span>
+              </div>
+              <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60">
+                Key: {cloudSyncCode}
+              </span>
+            </div>
+
+            <button
+              onClick={() => {
+                disableCloudSync();
+                setSyncMessage('Cloud Sync disconnected. Reverted to LocalStorage mode.');
+              }}
+              className="w-full py-2.5 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center space-x-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              <WifiOff className="w-4 h-4" />
+              <span>Disconnect Cloud Sync</span>
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleEnableSync} className="space-y-3 pt-1">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Enter a Private Sync Key
+              </label>
+              <div className="relative">
+                <Key className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="e.g. pradeep-bills-2026"
+                  value={syncKeyInput}
+                  onChange={e => setSyncKeyInput(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                />
+              </div>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                Enter the exact same Sync Key on your other devices to link them together!
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-md shadow-blue-600/20 transition-all"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Enable Real-Time Cloud Sync</span>
+            </button>
+          </form>
+        )}
       </div>
 
       {/* PWA Install Section */}
@@ -275,10 +383,10 @@ export const SettingsView: React.FC = () => {
         <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-orange-500 shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
           <h4 className="font-bold text-slate-900 dark:text-slate-100">
-            100% Offline & Private
+            100% Offline & Hybrid Cloud Sync
           </h4>
           <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-            Your financial payment details are saved strictly on your local browser device. No servers, paid backends, or cloud tracking.
+            Your payments are saved locally on your device and encrypted. Enabling Cloud Sync links your payment records securely across all your devices using your private Sync Key.
           </p>
         </div>
       </div>
