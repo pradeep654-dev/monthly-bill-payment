@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
-import type { PaymentItem, PaymentTemplate, MonthSummary, ThemeMode, ActiveTab } from '../types';
-import { INITIAL_MONTH, DEFAULT_TEMPLATES, INITIAL_PAYMENTS_SEPT_2026 } from '../data/initialData';
+import type { PaymentItem, PaymentTemplate, PaymentMethod, MonthSummary, ThemeMode, ActiveTab } from '../types';
+import { INITIAL_MONTH, DEFAULT_TEMPLATES, INITIAL_PAYMENTS_SEPT_2026, DEFAULT_PAYMENT_METHODS } from '../data/initialData';
 import { getMonthName, getNextMonthKey, getPrevMonthKey } from '../utils/formatters';
 import { pushToCloudSync, fetchLatestCloudSync, subscribeToCloudEvents } from '../utils/cloudSync';
 
@@ -11,12 +11,19 @@ interface PaymentContextType {
   goToPrevMonth: () => void;
   payments: PaymentItem[];
   currentMonthPayments: PaymentItem[];
+  paymentMethods: PaymentMethod[];
   summary: MonthSummary;
   allMonthSummaries: MonthSummary[];
   togglePaid: (id: string) => void;
   addPayment: (data: Omit<PaymentItem, 'id' | 'monthKey' | 'isPaid' | 'paidAt'>) => void;
   updatePayment: (id: string, data: Partial<PaymentItem>) => void;
   deletePayment: (id: string) => void;
+  
+  // Payment Methods CRUD
+  addPaymentMethod: (method: Omit<PaymentMethod, 'id'>) => void;
+  updatePaymentMethod: (id: string, data: Partial<PaymentMethod>) => void;
+  deletePaymentMethod: (id: string) => void;
+
   theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
   activeTab: ActiveTab;
@@ -34,6 +41,7 @@ interface PaymentContextType {
 
 const STORAGE_KEY_PAYMENTS = 'paytracker_payments_v1';
 const STORAGE_KEY_TEMPLATES = 'paytracker_templates_v1';
+const STORAGE_KEY_METHODS = 'paytracker_methods_v1';
 const STORAGE_KEY_THEME = 'paytracker_theme_v1';
 const STORAGE_KEY_SYNC_CODE = 'paytracker_sync_code_v1';
 
@@ -78,6 +86,22 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [theme]);
 
+  // Load Payment Methods
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_METHODS);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to load payment methods from localStorage:', e);
+    }
+    return DEFAULT_PAYMENT_METHODS;
+  });
+
+  // Save Payment Methods
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_METHODS, JSON.stringify(paymentMethods));
+  }, [paymentMethods]);
+
   // Load Templates
   const [templates, setTemplates] = useState<PaymentTemplate[]>(() => {
     try {
@@ -93,7 +117,16 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [payments, setPayments] = useState<PaymentItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_PAYMENTS);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((p: PaymentItem) => {
+          if (!p.paymentMethodId) {
+            const match = DEFAULT_TEMPLATES.find(t => t.name.toLowerCase() === p.name.toLowerCase());
+            return { ...p, paymentMethodId: match?.paymentMethodId || 'pm-1' };
+          }
+          return p;
+        });
+      }
     } catch (e) {
       console.error('Failed to load payments from localStorage:', e);
     }
@@ -115,7 +148,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Real-time Cloud Sync Event Listener
   useEffect(() => {
     if (isCloudSyncActive && cloudSyncCode) {
-      // First fetch latest state from cloud
       fetchLatestCloudSync(cloudSyncCode).then(latest => {
         if (latest && latest.payments && latest.payments.length > 0) {
           isRemoteUpdatingRef.current = true;
@@ -129,7 +161,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       });
 
-      // Subscribe to live SSE events from other devices
       const unsub = subscribeToCloudEvents(cloudSyncCode, cloudData => {
         if (cloudData.payments && cloudData.payments.length > 0) {
           isRemoteUpdatingRef.current = true;
@@ -149,7 +180,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [isCloudSyncActive, cloudSyncCode]);
 
-  // Auto-initialize recurring payments for a new month if no payments exist for it
+  // Auto-initialize recurring payments for a new month
   useEffect(() => {
     const monthHasPayments = payments.some(p => p.monthKey === currentMonthKey);
     if (!monthHasPayments && templates.length > 0) {
@@ -162,6 +193,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           amount: t.amount,
           dueDay: t.dueDay,
           category: t.category,
+          paymentMethodId: t.paymentMethodId,
           isRecurring: true,
           isPaid: false,
           paidAt: null,
@@ -184,12 +216,28 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCurrentMonthKey(prev => getPrevMonthKey(prev));
   };
 
-  // Toggle Paid status
+  // Toggle Paid status and update Payment Method balance
   const togglePaid = (id: string) => {
     setPayments(prev =>
       prev.map(item => {
         if (item.id === id) {
           const nextIsPaid = !item.isPaid;
+
+          // Adjust payment method balance
+          if (item.paymentMethodId) {
+            setPaymentMethods(methods =>
+              methods.map(method => {
+                if (method.id === item.paymentMethodId) {
+                  const newBalance = nextIsPaid
+                    ? method.balance - item.amount // Paid: Decrease balance
+                    : method.balance + item.amount; // Unpaid: Restore balance
+                  return { ...method, balance: Math.max(0, newBalance) };
+                }
+                return method;
+              })
+            );
+          }
+
           return {
             ...item,
             isPaid: nextIsPaid,
@@ -199,6 +247,25 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return item;
       })
     );
+  };
+
+  // Payment Methods CRUD
+  const addPaymentMethod = (data: Omit<PaymentMethod, 'id'>) => {
+    const newMethod: PaymentMethod = {
+      ...data,
+      id: `pm-${Date.now()}`
+    };
+    setPaymentMethods(prev => [...prev, newMethod]);
+  };
+
+  const updatePaymentMethod = (id: string, data: Partial<PaymentMethod>) => {
+    setPaymentMethods(prev =>
+      prev.map(m => (m.id === id ? { ...m, ...data } : m))
+    );
+  };
+
+  const deletePaymentMethod = (id: string) => {
+    setPaymentMethods(prev => prev.filter(m => m.id !== id));
   };
 
   // Add Payment
@@ -219,6 +286,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         amount: data.amount,
         dueDay: data.dueDay,
         category: data.category,
+        paymentMethodId: data.paymentMethodId,
         isRecurring: true,
         notes: data.notes
       };
@@ -235,6 +303,19 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       prev.map(item => {
         if (item.id === id) {
           const updated = { ...item, ...data };
+
+          // If payment was already paid and payment method or amount changed, adjust balance delta
+          if (item.isPaid && item.paymentMethodId && data.amount !== undefined && data.amount !== item.amount) {
+            const delta = data.amount - item.amount;
+            setPaymentMethods(methods =>
+              methods.map(m =>
+                m.id === item.paymentMethodId
+                  ? { ...m, balance: Math.max(0, m.balance - delta) }
+                  : m
+              )
+            );
+          }
+
           if (item.templateId && data.isRecurring) {
             setTemplates(tmpls =>
               tmpls.map(t =>
@@ -245,6 +326,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
                       amount: updated.amount,
                       dueDay: updated.dueDay,
                       category: updated.category,
+                      paymentMethodId: updated.paymentMethodId,
                       notes: updated.notes
                     }
                   : t
@@ -260,16 +342,29 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Delete Payment
   const deletePayment = (id: string) => {
-    setPayments(prev => prev.filter(item => item.id !== id));
+    const item = payments.find(p => p.id === id);
+    if (item && item.isPaid && item.paymentMethodId) {
+      // Restore balance if deleted while marked as paid
+      setPaymentMethods(methods =>
+        methods.map(m =>
+          m.id === item.paymentMethodId
+            ? { ...m, balance: m.balance + item.amount }
+            : m
+        )
+      );
+    }
+    setPayments(prev => prev.filter(p => p.id !== id));
   };
 
   // Reset Data
   const resetToDefaultData = () => {
     setPayments(INITIAL_PAYMENTS_SEPT_2026);
     setTemplates(DEFAULT_TEMPLATES);
+    setPaymentMethods(DEFAULT_PAYMENT_METHODS);
     setCurrentMonthKey(INITIAL_MONTH);
     localStorage.removeItem(STORAGE_KEY_PAYMENTS);
     localStorage.removeItem(STORAGE_KEY_TEMPLATES);
+    localStorage.removeItem(STORAGE_KEY_METHODS);
   };
 
   // Enable Cloud Sync
@@ -281,7 +376,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsCloudSyncActive(true);
     localStorage.setItem(STORAGE_KEY_SYNC_CODE, cleanCode);
 
-    // Initial push to cloud
     await pushToCloudSync(cleanCode, { payments, templates });
     return true;
   };
@@ -301,6 +395,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         exportDate: new Date().toISOString(),
         payments,
         templates,
+        paymentMethods,
         theme
       },
       null,
@@ -316,6 +411,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setPayments(parsed.payments);
         if (Array.isArray(parsed.templates)) {
           setTemplates(parsed.templates);
+        }
+        if (Array.isArray(parsed.paymentMethods)) {
+          setPaymentMethods(parsed.paymentMethods);
         }
         if (parsed.theme) {
           setThemeState(parsed.theme);
@@ -396,12 +494,16 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         goToPrevMonth,
         payments,
         currentMonthPayments,
+        paymentMethods,
         summary,
         allMonthSummaries,
         togglePaid,
         addPayment,
         updatePayment,
         deletePayment,
+        addPaymentMethod,
+        updatePaymentMethod,
+        deletePaymentMethod,
         theme,
         setTheme,
         activeTab,

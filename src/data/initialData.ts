@@ -1,6 +1,33 @@
-import type { PaymentItem, PaymentTemplate } from '../types';
+import type { PaymentItem, PaymentTemplate, PaymentMethod } from '../types';
 
 export const INITIAL_MONTH = '2026-09';
+
+export const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
+  {
+    id: 'pm-1',
+    name: 'HDFC Bank Account',
+    type: 'bank',
+    balance: 60000, // Initial 75,000 minus Rent 15,000
+    initialBalance: 75000,
+    color: 'blue'
+  },
+  {
+    id: 'pm-2',
+    name: 'GPay / PhonePe UPI',
+    type: 'wallet',
+    balance: 11500, // Initial 15,000 minus Electricity 2,500 & Internet 1,000
+    initialBalance: 15000,
+    color: 'emerald'
+  },
+  {
+    id: 'pm-3',
+    name: 'ICICI Savings',
+    type: 'bank',
+    balance: 50000,
+    initialBalance: 50000,
+    color: 'purple'
+  }
+];
 
 export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
   {
@@ -9,8 +36,9 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 15000,
     dueDay: 5,
     category: 'housing',
+    paymentMethodId: 'pm-1',
     isRecurring: true,
-    notes: 'Apartment rent paid via UPI'
+    notes: 'Apartment rent paid via HDFC Bank'
   },
   {
     id: 'tmpl-2',
@@ -18,6 +46,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 2500,
     dueDay: 10,
     category: 'utilities',
+    paymentMethodId: 'pm-2',
     isRecurring: true,
     notes: 'State electricity board bill'
   },
@@ -27,6 +56,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 1000,
     dueDay: 15,
     category: 'internet',
+    paymentMethodId: 'pm-2',
     isRecurring: true,
     notes: 'Fiber broadband monthly plan'
   },
@@ -36,6 +66,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 6500,
     dueDay: 20,
     category: 'finance',
+    paymentMethodId: 'pm-1',
     isRecurring: true,
     notes: 'HDFC credit card bill payment'
   },
@@ -45,6 +76,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 5000,
     dueDay: 5,
     category: 'investment',
+    paymentMethodId: 'pm-3',
     isRecurring: true,
     notes: 'Nifty 50 Index Fund auto-debit'
   },
@@ -54,6 +86,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 2000,
     dueDay: 10,
     category: 'family',
+    paymentMethodId: 'pm-3',
     isRecurring: true,
     notes: 'Post office savings scheme'
   }
@@ -67,11 +100,12 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 15000,
     dueDay: 5,
     category: 'housing',
+    paymentMethodId: 'pm-1',
     isRecurring: true,
     isPaid: true,
     paidAt: '2026-09-04T10:30:00.000Z',
     monthKey: '2026-09',
-    notes: 'Apartment rent paid via UPI'
+    notes: 'Apartment rent paid via HDFC Bank'
   },
   {
     id: 'pay-sept-2',
@@ -80,6 +114,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 2500,
     dueDay: 10,
     category: 'utilities',
+    paymentMethodId: 'pm-2',
     isRecurring: true,
     isPaid: true,
     paidAt: '2026-09-09T14:15:00.000Z',
@@ -93,6 +128,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 1000,
     dueDay: 15,
     category: 'internet',
+    paymentMethodId: 'pm-2',
     isRecurring: true,
     isPaid: true,
     paidAt: '2026-09-12T09:00:00.000Z',
@@ -106,6 +142,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 6500,
     dueDay: 20,
     category: 'finance',
+    paymentMethodId: 'pm-1',
     isRecurring: true,
     isPaid: false,
     paidAt: null,
@@ -119,6 +156,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 5000,
     dueDay: 5,
     category: 'investment',
+    paymentMethodId: 'pm-3',
     isRecurring: true,
     isPaid: false,
     paidAt: null,
@@ -132,6 +170,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 2000,
     dueDay: 10,
     category: 'family',
+    paymentMethodId: 'pm-3',
     isRecurring: true,
     isPaid: false,
     paidAt: null,

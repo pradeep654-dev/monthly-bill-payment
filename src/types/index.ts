@@ -8,6 +8,18 @@ export type CategoryType =
   | 'entertainment' 
   | 'other';
 
+export type AccountType = 'bank' | 'wallet' | 'card' | 'cash';
+
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  type: AccountType;
+  balance: number;
+  initialBalance: number;
+  iconName?: string;
+  color?: string;
+}
+
 export interface PaymentItem {
   id: string;
   templateId?: string; // Reference to master recurring template if applicable
@@ -15,6 +27,7 @@ export interface PaymentItem {
   amount: number;
   dueDay: number; // 1 to 31
   category: CategoryType;
+  paymentMethodId?: string; // ID of PaymentMethod used for deduction
   isRecurring: boolean;
   notes?: string;
   isPaid: boolean;
@@ -28,6 +41,7 @@ export interface PaymentTemplate {
   amount: number;
   dueDay: number;
   category: CategoryType;
+  paymentMethodId?: string;
   isRecurring: boolean;
   notes?: string;
 }

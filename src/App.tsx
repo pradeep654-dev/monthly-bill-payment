@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PaymentProvider, usePayments } from './context/PaymentContext';
 import { Header } from './components/Header';
 import { OverviewCard } from './components/OverviewCard';
+import { PaymentAccountsBar } from './components/PaymentAccountsBar';
 import { PaymentList } from './components/PaymentList';
 import { HistoryView } from './components/HistoryView';
 import { SettingsView } from './components/SettingsView';
@@ -30,7 +31,7 @@ const MainContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-[#06090F] text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-emerald-500/20 dark:selection:bg-orange-500/20">
-      {/* App Shell Container - Optimized for mobile & responsive desktop preview */}
+      {/* App Shell Container */}
       <div className="w-full max-w-md mx-auto bg-slate-50 dark:bg-[#090D16] min-h-screen flex flex-col shadow-2xl relative border-x border-slate-200/50 dark:border-slate-800/40">
         
         {/* Fixed Header */}
@@ -41,6 +42,7 @@ const MainContent: React.FC = () => {
           {activeTab === 'home' && (
             <>
               <OverviewCard />
+              <PaymentAccountsBar />
               <PaymentList
                 onAddPayment={handleAddPayment}
                 onEditPayment={handleEditPayment}

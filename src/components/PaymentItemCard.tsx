@@ -15,9 +15,11 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   payment,
   onEdit
 }) => {
-  const { togglePaid } = usePayments();
+  const { togglePaid, paymentMethods } = usePayments();
   const categoryMeta = getCategoryMeta(payment.category);
   const IconComponent = categoryMeta.icon;
+
+  const linkedAccount = paymentMethods.find(m => m.id === payment.paymentMethodId);
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,9 +53,17 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
           >
             {payment.name}
           </h4>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-            {formatDueDay(payment.dueDay)}
-          </p>
+          
+          <div className="flex items-center space-x-2 mt-0.5">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              {formatDueDay(payment.dueDay)}
+            </span>
+            {linkedAccount && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                {linkedAccount.name}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

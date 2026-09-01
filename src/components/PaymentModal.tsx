@@ -15,12 +15,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   editingPayment
 }) => {
-  const { addPayment, updatePayment, deletePayment } = usePayments();
+  const { addPayment, updatePayment, deletePayment, paymentMethods } = usePayments();
 
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDay, setDueDay] = useState<number>(5);
   const [category, setCategory] = useState<CategoryType>('other');
+  const [paymentMethodId, setPaymentMethodId] = useState<string>('');
   const [isRecurring, setIsRecurring] = useState(true);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
@@ -31,6 +32,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setAmount(editingPayment.amount.toString());
       setDueDay(editingPayment.dueDay);
       setCategory(editingPayment.category);
+      setPaymentMethodId(editingPayment.paymentMethodId || (paymentMethods[0]?.id || ''));
       setIsRecurring(editingPayment.isRecurring);
       setNotes(editingPayment.notes || '');
     } else {
@@ -38,11 +40,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setAmount('');
       setDueDay(5);
       setCategory('housing');
+      setPaymentMethodId(paymentMethods[0]?.id || '');
       setIsRecurring(true);
       setNotes('');
     }
     setError('');
-  }, [editingPayment, isOpen]);
+  }, [editingPayment, isOpen, paymentMethods]);
 
   if (!isOpen) return null;
 
@@ -64,6 +67,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         amount: numAmount,
         dueDay,
         category,
+        paymentMethodId,
         isRecurring,
         notes: notes.trim()
       });
@@ -73,6 +77,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         amount: numAmount,
         dueDay,
         category,
+        paymentMethodId,
         isRecurring,
         notes: notes.trim()
       });
@@ -167,6 +172,24 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           </div>
 
+          {/* Payment Account Selector */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Payment Account (Balance Deducted)
+            </label>
+            <select
+              value={paymentMethodId}
+              onChange={e => setPaymentMethodId(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:focus:ring-orange-500/40"
+            >
+              {paymentMethods.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.name} (Balance: ₹{m.balance.toLocaleString('en-IN')})
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Category */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -235,7 +258,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               placeholder="e.g. Paid via PhonePe / Auto-debit"
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:focus:ring-orange-500/40 font-normal"
+              className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-normal"
             />
           </div>
 
