@@ -3,6 +3,7 @@ import { PaymentProvider, usePayments } from './context/PaymentContext';
 import { Header } from './components/Header';
 import { OverviewCard } from './components/OverviewCard';
 import { PaymentAccountsBar } from './components/PaymentAccountsBar';
+import { CommitmentLoadCard } from './components/CommitmentLoadCard';
 import { PaymentList } from './components/PaymentList';
 import { HistoryView } from './components/HistoryView';
 import { SettingsView } from './components/SettingsView';
@@ -42,6 +43,7 @@ const MainContent: React.FC = () => {
           {activeTab === 'home' && (
             <>
               <OverviewCard />
+              <CommitmentLoadCard />
               <PaymentAccountsBar />
               <PaymentList
                 onAddPayment={handleAddPayment}

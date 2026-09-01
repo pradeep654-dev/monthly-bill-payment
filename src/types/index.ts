@@ -28,6 +28,7 @@ export interface PaymentItem {
   dueDay: number; // 1 to 31
   category: CategoryType;
   paymentMethodId?: string; // ID of PaymentMethod used for deduction
+  upiId?: string; // Optional VPA/UPI ID e.g. "landlord@upi"
   isRecurring: boolean;
   notes?: string;
   isPaid: boolean;
@@ -42,6 +43,7 @@ export interface PaymentTemplate {
   dueDay: number;
   category: CategoryType;
   paymentMethodId?: string;
+  upiId?: string;
   isRecurring: boolean;
   notes?: string;
 }
@@ -59,3 +61,4 @@ export interface MonthSummary {
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type ActiveTab = 'home' | 'history' | 'settings';
+export type UrgencyFilter = 'all' | 'unpaid' | 'overdue';
