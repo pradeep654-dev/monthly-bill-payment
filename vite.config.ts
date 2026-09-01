@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/monthly-bill-payment/',
   plugins: [
     react(),
     tailwindcss(),
@@ -19,7 +20,8 @@ export default defineConfig({
         background_color: '#0F172A',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: '/monthly-bill-payment/',
+        scope: '/monthly-bill-payment/',
         icons: [
           {
             src: 'pwa-icon.svg',
