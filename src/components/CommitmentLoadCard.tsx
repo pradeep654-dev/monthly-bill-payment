@@ -6,7 +6,7 @@ import { formatCurrency } from '../utils/formatters';
 const STORAGE_KEY_SALARY = 'paytracker_salary_v1';
 
 export const CommitmentLoadCard: React.FC = () => {
-  const { summary } = usePayments();
+  const { summary, isLiquidGlass } = usePayments();
   const [salary, setSalary] = useState<number>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SALARY);
     return saved ? parseFloat(saved) : 80000;
@@ -32,17 +32,21 @@ export const CommitmentLoadCard: React.FC = () => {
   const remainingCashflow = Math.max(0, salary - summary.totalAmount);
 
   return (
-    <div className="bg-white dark:bg-[#161B26] border border-slate-100 dark:border-slate-800 rounded-3xl p-4 shadow-xs">
+    <div className="app-card p-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400">
-            <Briefcase className="w-4 h-4" />
+        <div className="flex items-center space-x-2.5">
+          <div className={`p-2 rounded-2xl ${
+            isLiquidGlass
+              ? 'real-liquid-pill text-slate-900 dark:text-white dark:border-white/30'
+              : 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40'
+          }`}>
+            <Briefcase className="w-4 h-4 stroke-[2.2]" />
           </div>
           <div>
-            <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200 tracking-tight">
+            <h4 className="font-black text-xs text-slate-900 dark:text-white tracking-tight">
               Commitment Load Ratio
             </h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] font-extrabold text-slate-600 dark:text-slate-200">
               {commitmentRatio}% of your income is locked in fixed bills
             </p>
           </div>
@@ -53,7 +57,7 @@ export const CommitmentLoadCard: React.FC = () => {
             setInputVal(salary.toString());
             setIsEditing(!isEditing);
           }}
-          className="text-xs font-bold text-emerald-600 dark:text-orange-400 hover:underline"
+          className="text-xs font-black text-emerald-600 dark:text-orange-400 hover:underline p-1 active:scale-95 transition-all"
         >
           {isEditing ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
@@ -61,17 +65,17 @@ export const CommitmentLoadCard: React.FC = () => {
 
       {/* Salary Edit Input */}
       {isEditing && (
-        <form onSubmit={handleSave} className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex space-x-2">
+        <form onSubmit={handleSave} className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 flex space-x-2">
           <input
             type="number"
             value={inputVal}
             onChange={e => setInputVal(e.target.value)}
             placeholder="Monthly Income (₹)"
-            className="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white"
+            className="flex-1 px-3.5 py-1.5 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-900 dark:text-white"
           />
           <button
             type="submit"
-            className="px-3 py-1.5 rounded-xl bg-emerald-500 dark:bg-orange-500 text-white font-bold text-xs"
+            className="px-3.5 py-1.5 rounded-2xl bg-emerald-500 dark:bg-orange-500 text-white font-black text-xs shadow-md active:scale-95"
           >
             Save
           </button>
@@ -80,23 +84,23 @@ export const CommitmentLoadCard: React.FC = () => {
 
       {/* Load Meter */}
       <div className="mt-3">
-        <div className="flex justify-between items-center text-[11px] font-semibold mb-1">
-          <span className="text-slate-600 dark:text-slate-400">
-            Committed: {formatCurrency(summary.totalAmount)}
+        <div className="flex justify-between items-center text-[11px] font-extrabold mb-1.5">
+          <span className="text-slate-700 dark:text-slate-300">
+            Committed: <strong className="text-slate-900 dark:text-white font-black">{formatCurrency(summary.totalAmount)}</strong>
           </span>
-          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+          <span className="text-emerald-600 dark:text-emerald-300 font-black">
             Free Cashflow: {formatCurrency(remainingCashflow)}
           </span>
         </div>
 
-        <div className="w-full bg-slate-100 dark:bg-[#262E3D] h-2.5 rounded-full overflow-hidden">
+        <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
               commitmentRatio > 70
-                ? 'bg-rose-500'
+                ? 'bg-gradient-to-r from-rose-500 to-red-400'
                 : commitmentRatio > 50
-                ? 'bg-amber-500'
-                : 'bg-emerald-500 dark:bg-orange-500'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-400'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-orange-500 dark:to-amber-400'
             }`}
             style={{ width: `${Math.min(100, commitmentRatio)}%` }}
           />

@@ -14,7 +14,8 @@ import {
   Cloud,
   RefreshCw,
   Key,
-  WifiOff
+  WifiOff,
+  Sparkles
 } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 
@@ -22,6 +23,8 @@ export const SettingsView: React.FC = () => {
   const { 
     theme, 
     setTheme, 
+    isLiquidGlass,
+    toggleLiquidGlass,
     resetToDefaultData, 
     exportData, 
     importData,
@@ -161,18 +164,18 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* Theme Section */}
-      <div className="bg-white dark:bg-[#161B26] border border-slate-100 dark:border-slate-800/80 rounded-3xl p-5 shadow-xs">
+      <div className="app-card p-5 shadow-xs">
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
           Appearance & Theme
         </h3>
 
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-2.5 mb-4">
           <button
             onClick={() => setTheme('light')}
             className={`p-3.5 rounded-2xl border flex flex-col items-center justify-center transition-all ${
               theme === 'light'
                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold shadow-xs'
-                : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#0D1117] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0D1117] text-slate-600 dark:text-slate-400 hover:border-slate-300'
             }`}
           >
             <Sun className="w-5 h-5 mb-1.5 text-emerald-600" />
@@ -185,7 +188,7 @@ export const SettingsView: React.FC = () => {
             className={`p-3.5 rounded-2xl border flex flex-col items-center justify-center transition-all ${
               theme === 'dark'
                 ? 'border-orange-500 bg-orange-950/40 text-orange-400 font-bold shadow-xs'
-                : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#0D1117] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0D1117] text-slate-600 dark:text-slate-400 hover:border-slate-300'
             }`}
           >
             <Moon className="w-5 h-5 mb-1.5 text-orange-500" />
@@ -198,7 +201,7 @@ export const SettingsView: React.FC = () => {
             className={`p-3.5 rounded-2xl border flex flex-col items-center justify-center transition-all ${
               theme === 'system'
                 ? 'border-slate-500 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold shadow-xs'
-                : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#0D1117] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0D1117] text-slate-600 dark:text-slate-400 hover:border-slate-300'
             }`}
           >
             <Monitor className="w-5 h-5 mb-1.5" />
@@ -206,10 +209,39 @@ export const SettingsView: React.FC = () => {
             <span className="text-[10px] text-slate-400 font-normal mt-0.5">Auto Match</span>
           </button>
         </div>
+
+        {/* 3D Liquid Glass UI Checkbox Switch */}
+        <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center space-x-3 pr-2">
+            <div className="p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+                3D Liquid Glassmorphism UI
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {isLiquidGlass
+                  ? 'Translucent glass cards & animated wave background enabled'
+                  : 'Clean UI active (Unchecked)'}
+              </p>
+            </div>
+          </div>
+
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              type="checkbox"
+              checked={isLiquidGlass}
+              onChange={toggleLiquidGlass}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+          </label>
+        </div>
       </div>
 
       {/* Cloud Sync (Multi-Device) Section */}
-      <div className="bg-white dark:bg-[#161B26] border border-slate-100 dark:border-slate-800/80 rounded-3xl p-5 shadow-xs space-y-3">
+      <div className="app-card p-5 shadow-xs space-y-3">
         <div className="flex items-center space-x-2.5">
           <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
             <Cloud className="w-5 h-5" />
@@ -286,7 +318,7 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* PWA Install Section */}
-      <div className="bg-white dark:bg-[#161B26] border border-slate-100 dark:border-slate-800/80 rounded-3xl p-5 shadow-xs">
+      <div className="app-card p-5 shadow-xs">
         <div className="flex items-center space-x-2.5 mb-3">
           <div className="p-2 rounded-xl bg-emerald-50 dark:bg-orange-950/40 text-emerald-600 dark:text-orange-500">
             <Smartphone className="w-5 h-5" />
@@ -319,7 +351,7 @@ export const SettingsView: React.FC = () => {
             )}
 
             {/* iOS Instructions */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-100 dark:border-slate-800 space-y-2.5">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200/80 dark:border-slate-800 space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   How to Install on iPhone (Safari)
@@ -348,7 +380,7 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* Data Management */}
-      <div className="bg-white dark:bg-[#161B26] border border-slate-100 dark:border-slate-800/80 rounded-3xl p-5 shadow-xs space-y-3">
+      <div className="app-card p-5 shadow-xs space-y-3">
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
           Data Management & PWA Cache
         </h3>

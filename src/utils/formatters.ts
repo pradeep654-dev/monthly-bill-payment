@@ -60,7 +60,7 @@ export const getUrgencyStatus = (dueDay: number, monthKey: string, isPaid: boole
     return {
       label: 'Paid',
       status: 'paid',
-      colorClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 font-bold'
+      colorClass: 'bg-emerald-500 text-white font-black shadow-xs border border-emerald-400'
     };
   }
 
@@ -78,7 +78,7 @@ export const getUrgencyStatus = (dueDay: number, monthKey: string, isPaid: boole
     return {
       label: 'Overdue',
       status: 'overdue',
-      colorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-bold animate-pulse'
+      colorClass: 'bg-rose-600 text-white border border-rose-400 font-black animate-pulse shadow-xs'
     };
   }
 
@@ -89,28 +89,28 @@ export const getUrgencyStatus = (dueDay: number, monthKey: string, isPaid: boole
       return {
         label: `Overdue (${diff}d)`,
         status: 'overdue',
-        colorClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-bold animate-pulse'
+        colorClass: 'bg-rose-600 text-white border border-rose-400 font-black animate-pulse shadow-xs'
       };
     }
     if (dueDay === currentDay) {
       return {
         label: 'Due Today',
         status: 'today',
-        colorClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 font-bold'
+        colorClass: 'bg-amber-400 text-slate-950 border border-amber-300 font-black shadow-xs'
       };
     }
     if (dueDay === currentDay + 1) {
       return {
         label: 'Due Tomorrow',
         status: 'upcoming',
-        colorClass: 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 font-bold'
+        colorClass: 'bg-blue-600 text-white border border-blue-400 font-black shadow-xs'
       };
     }
     const diff = dueDay - currentDay;
     return {
       label: `Due in ${diff} days`,
       status: 'upcoming',
-      colorClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-medium'
+      colorClass: 'bg-white text-slate-950 dark:bg-white dark:text-slate-950 font-black border border-white shadow-xs'
     };
   }
 
@@ -118,11 +118,21 @@ export const getUrgencyStatus = (dueDay: number, monthKey: string, isPaid: boole
   return {
     label: `Due on ${getOrdinalSuffix(dueDay)}`,
     status: 'upcoming',
-    colorClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-medium'
+    colorClass: 'bg-white text-slate-950 dark:bg-white dark:text-slate-950 font-black border border-white shadow-xs'
   };
 };
 
+/**
+ * Generates Paytm default UPI URL scheme (paytmmp:// or paytm://) with generic upi:// fallback
+ */
 export const generateUpiUrl = (payeeName: string, amount: number, upiId?: string): string => {
+  const vpa = upiId ? upiId.trim() : 'payee@upi';
+  const nameEncoded = encodeURIComponent(payeeName);
+  // Default to Paytm deep link scheme
+  return `paytmmp://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+};
+
+export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?: string): string => {
   const vpa = upiId ? upiId.trim() : 'payee@upi';
   const nameEncoded = encodeURIComponent(payeeName);
   return `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;

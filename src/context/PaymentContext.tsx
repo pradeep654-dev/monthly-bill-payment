@@ -26,6 +26,9 @@ interface PaymentContextType {
 
   theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
+  isLiquidGlass: boolean;
+  toggleLiquidGlass: () => void;
+
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   resetToDefaultData: () => void;
@@ -43,6 +46,7 @@ const STORAGE_KEY_PAYMENTS = 'paytracker_payments_v1';
 const STORAGE_KEY_TEMPLATES = 'paytracker_templates_v1';
 const STORAGE_KEY_METHODS = 'paytracker_methods_v1';
 const STORAGE_KEY_THEME = 'paytracker_theme_v1';
+const STORAGE_KEY_LIQUID_GLASS = 'paytracker_liquid_glass_v1';
 const STORAGE_KEY_SYNC_CODE = 'paytracker_sync_code_v1';
 
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
@@ -65,12 +69,24 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_THEME);
     if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
-    return 'dark'; // Default Concept 3 Dark Mode
+    return 'dark'; // Default Dark Mode
   });
 
-  // Apply Theme class to <html>
+  // Liquid Glass Mode state
+  const [isLiquidGlass, setIsLiquidGlass] = useState<boolean>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_LIQUID_GLASS);
+    return saved ? saved === 'true' : false; // Default to false (clean UI)
+  });
+
+  const toggleLiquidGlass = () => {
+    setIsLiquidGlass(prev => !prev);
+  };
+
+  // Apply Theme & Liquid Glass class to <html>
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_THEME, theme);
+    localStorage.setItem(STORAGE_KEY_LIQUID_GLASS, isLiquidGlass ? 'true' : 'false');
+
     const root = document.documentElement;
 
     if (theme === 'dark') {
@@ -84,7 +100,13 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         root.classList.remove('dark');
       }
     }
-  }, [theme]);
+
+    if (isLiquidGlass) {
+      root.classList.add('liquid-glass-mode');
+    } else {
+      root.classList.remove('liquid-glass-mode');
+    }
+  }, [theme, isLiquidGlass]);
 
   // Load Payment Methods
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(() => {
@@ -396,7 +418,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         payments,
         templates,
         paymentMethods,
-        theme
+        theme,
+        isLiquidGlass
       },
       null,
       2
@@ -417,6 +440,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
         if (parsed.theme) {
           setThemeState(parsed.theme);
+        }
+        if (typeof parsed.isLiquidGlass === 'boolean') {
+          setIsLiquidGlass(parsed.isLiquidGlass);
         }
         return true;
       }
@@ -506,6 +532,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deletePaymentMethod,
         theme,
         setTheme,
+        isLiquidGlass,
+        toggleLiquidGlass,
         activeTab,
         setActiveTab,
         resetToDefaultData,
