@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="112" fill="#0F172A"/>
+  <rect x="80" y="80" width="352" height="352" rx="48" fill="#1E293B" stroke="#334155" stroke-width="8"/>
+  <!-- Checkmark circle -->
+  <circle cx="170" cy="180" r="40" fill="#10B981"/>
+  <path d="M152 180l12 12 24-24" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Lines -->
+  <line x1="240" y1="165" x2="370" y2="165" stroke="#F8FAFC" stroke-width="14" stroke-linecap="round"/>
+  <line x1="240" y1="195" x2="330" y2="195" stroke="#94A3B8" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Orange check circle -->
+  <circle cx="170" cy="310" r="40" fill="#F97316"/>
+  <path d="M152 310l12 12 24-24" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Lines -->
+  <line x1="240" y1="295" x2="370" y2="295" stroke="#F8FAFC" stroke-width="14" stroke-linecap="round"/>
+  <line x1="240" y1="325" x2="340" y2="325" stroke="#94A3B8" stroke-width="10" stroke-linecap="round"/>
+</svg>
