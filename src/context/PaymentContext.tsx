@@ -1,16 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import type { PaymentItem, PaymentTemplate, MonthSummary, ThemeMode, ActiveTab } from '../types';
 import { INITIAL_MONTH, DEFAULT_TEMPLATES, INITIAL_PAYMENTS_SEPT_2026 } from '../data/initialData';
 import { getMonthName, getNextMonthKey, getPrevMonthKey } from '../utils/formatters';
-import { 
-  getSavedFirebaseConfig, 
-  saveFirebaseConfig, 
-  clearFirebaseConfig, 
-  initFirebase, 
-  pushDataToCloud, 
-  subscribeToCloudSync, 
-  type FirebaseSyncConfig 
-} from '../firebase/config';
+import { pushToCloudSync, fetchLatestCloudSync, subscribeToCloudEvents } from '../utils/cloudSync';
 
 interface PaymentContextType {
   currentMonthKey: string;
@@ -36,7 +28,7 @@ interface PaymentContextType {
   // Cloud Sync properties & methods
   cloudSyncCode: string;
   isCloudSyncActive: boolean;
-  enableCloudSync: (syncCode: string, customConfig?: FirebaseSyncConfig) => Promise<boolean>;
+  enableCloudSync: (syncCode: string) => Promise<boolean>;
   disableCloudSync: () => void;
 }
 
@@ -58,6 +50,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isCloudSyncActive, setIsCloudSyncActive] = useState<boolean>(() => {
     return !!localStorage.getItem(STORAGE_KEY_SYNC_CODE);
   });
+
+  const isRemoteUpdatingRef = useRef(false);
 
   // Load Theme
   const [theme, setThemeState] = useState<ThemeMode>(() => {
@@ -106,11 +100,11 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return INITIAL_PAYMENTS_SEPT_2026;
   });
 
-  // Save payments and templates to localStorage
+  // Save payments and templates to localStorage and Cloud Sync
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PAYMENTS, JSON.stringify(payments));
-    if (isCloudSyncActive && cloudSyncCode) {
-      pushDataToCloud(cloudSyncCode, { payments, templates });
+    if (isCloudSyncActive && cloudSyncCode && !isRemoteUpdatingRef.current) {
+      pushToCloudSync(cloudSyncCode, { payments, templates });
     }
   }, [payments, isCloudSyncActive, cloudSyncCode, templates]);
 
@@ -118,18 +112,37 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(templates));
   }, [templates]);
 
-  // Cloud Sync Listener setup
+  // Real-time Cloud Sync Event Listener
   useEffect(() => {
     if (isCloudSyncActive && cloudSyncCode) {
-      initFirebase();
-      const unsub = subscribeToCloudSync(cloudSyncCode, cloudData => {
-        if (cloudData.payments && cloudData.payments.length > 0) {
-          setPayments(cloudData.payments);
-        }
-        if (cloudData.templates && cloudData.templates.length > 0) {
-          setTemplates(cloudData.templates);
+      // First fetch latest state from cloud
+      fetchLatestCloudSync(cloudSyncCode).then(latest => {
+        if (latest && latest.payments && latest.payments.length > 0) {
+          isRemoteUpdatingRef.current = true;
+          setPayments(latest.payments);
+          if (latest.templates && latest.templates.length > 0) {
+            setTemplates(latest.templates);
+          }
+          setTimeout(() => {
+            isRemoteUpdatingRef.current = false;
+          }, 200);
         }
       });
+
+      // Subscribe to live SSE events from other devices
+      const unsub = subscribeToCloudEvents(cloudSyncCode, cloudData => {
+        if (cloudData.payments && cloudData.payments.length > 0) {
+          isRemoteUpdatingRef.current = true;
+          setPayments(cloudData.payments);
+          if (cloudData.templates && cloudData.templates.length > 0) {
+            setTemplates(cloudData.templates);
+          }
+          setTimeout(() => {
+            isRemoteUpdatingRef.current = false;
+          }, 200);
+        }
+      });
+
       return () => {
         if (unsub) unsub();
       };
@@ -260,37 +273,16 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Enable Cloud Sync
-  const enableCloudSync = async (
-    syncCode: string,
-    customConfig?: FirebaseSyncConfig
-  ): Promise<boolean> => {
+  const enableCloudSync = async (syncCode: string): Promise<boolean> => {
     const cleanCode = syncCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
     if (!cleanCode) return false;
-
-    if (customConfig) {
-      saveFirebaseConfig(customConfig);
-    } else {
-      const existingConfig = getSavedFirebaseConfig();
-      if (!existingConfig) {
-        // Default public demo Firebase backend for instant sync
-        const defaultConfig: FirebaseSyncConfig = {
-          apiKey: "AIzaSyDemoKeyForMonthlyPaymentTrackerPWA",
-          authDomain: "monthly-bill-payment.firebaseapp.com",
-          projectId: "monthly-bill-payment",
-          storageBucket: "monthly-bill-payment.appspot.com",
-          messagingSenderId: "123456789",
-          appId: "1:123456789:web:abcdef123456"
-        };
-        saveFirebaseConfig(defaultConfig);
-      }
-    }
 
     setCloudSyncCode(cleanCode);
     setIsCloudSyncActive(true);
     localStorage.setItem(STORAGE_KEY_SYNC_CODE, cleanCode);
 
     // Initial push to cloud
-    await pushDataToCloud(cleanCode, { payments, templates });
+    await pushToCloudSync(cleanCode, { payments, templates });
     return true;
   };
 
@@ -299,7 +291,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsCloudSyncActive(false);
     setCloudSyncCode('');
     localStorage.removeItem(STORAGE_KEY_SYNC_CODE);
-    clearFirebaseConfig();
   };
 
   // Export Data as JSON
