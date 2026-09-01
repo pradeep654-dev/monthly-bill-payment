@@ -110,6 +110,30 @@ export const SettingsView: React.FC = () => {
     }
   };
 
+  const handleForceRefresh = async () => {
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+          await registration.unregister();
+        }
+      } catch (e) {
+        console.error('Error unregistering service workers:', e);
+      }
+    }
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        for (let name of cacheNames) {
+          await caches.delete(name);
+        }
+      } catch (e) {
+        console.error('Error clearing caches:', e);
+      }
+    }
+    window.location.reload();
+  };
+
   const handleEnableSync = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!syncKeyInput.trim()) {
@@ -326,7 +350,7 @@ export const SettingsView: React.FC = () => {
       {/* Data Management */}
       <div className="bg-white dark:bg-[#161B26] border border-slate-100 dark:border-slate-800/80 rounded-3xl p-5 shadow-xs space-y-3">
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-          Data Backup & Local Storage
+          Data Management & PWA Cache
         </h3>
 
         {importMessage && (
@@ -367,6 +391,15 @@ export const SettingsView: React.FC = () => {
             className="hidden"
           />
         </div>
+
+        {/* Force Update PWA */}
+        <button
+          onClick={handleForceRefresh}
+          className="w-full py-3 px-4 rounded-2xl bg-emerald-50 dark:bg-orange-950/40 border border-emerald-200 dark:border-orange-800/40 text-emerald-700 dark:text-orange-400 font-bold text-xs flex items-center justify-center space-x-2 hover:bg-emerald-100 dark:hover:bg-orange-900/50 transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>Force Refresh & Update Latest App Version</span>
+        </button>
 
         {/* Reset */}
         <button

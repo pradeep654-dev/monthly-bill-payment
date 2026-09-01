@@ -12,6 +12,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['pwa-icon.svg', 'robots.txt', 'apple-touch-icon.png'],
+      workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true
+      },
       manifest: {
         name: 'Monthly Payment Tracker',
         short_name: 'PayTracker',
