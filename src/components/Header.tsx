@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { MonthPickerModal } from './MonthPickerModal';
+import logoHorizontal from '../assets/logo-horizontal.png';
+import logoLightHorizontal from '../assets/logo-light-horizontal.png';
+import logoLiquidDarkHorizontal from '../assets/logo-liquid-dark-horizontal.png';
+import logoLiquidLightHorizontal from '../assets/logo-liquid-light-horizontal.png';
 
 export const Header: React.FC = () => {
   const { summary, goToNextMonth, goToPrevMonth, isLiquidGlass } = usePayments();
@@ -15,27 +19,39 @@ export const Header: React.FC = () => {
           : 'bg-white/95 dark:bg-[#050812]/95 backdrop-blur-md border-slate-200/80 dark:border-slate-800'
       }`}>
         <div className="px-4 py-3 flex items-center justify-between">
-          {/* App Identity */}
-          <div className="flex items-center space-x-2.5">
-            <div className={`w-9 h-9 rounded-2xl flex items-center justify-center font-black text-sm tracking-tighter shadow-md ${
-              isLiquidGlass
-                ? 'real-liquid-pill text-slate-900 dark:text-white dark:border-white/30'
-                : 'bg-gradient-to-tr from-emerald-500 to-teal-400 dark:from-orange-500 dark:to-amber-500 text-white'
-            }`}>
-              ₹
-            </div>
-            <div>
-              <h1 className="font-black text-sm text-slate-900 dark:text-white tracking-tight leading-tight">
-                PayTracker
-              </h1>
-              <span className={`text-[10px] font-extrabold ${
-                isLiquidGlass
-                  ? 'text-blue-600 dark:text-cyan-400'
-                  : 'text-emerald-600 dark:text-orange-400'
-              }`}>
-                Commitment Tracker
-              </span>
-            </div>
+          {/* App Identity - Dynamic Theme Logos */}
+          <div className="flex items-center">
+            {isLiquidGlass ? (
+              <>
+                {/* 3D Liquid Glass Dark Mode Logo */}
+                <img
+                  src={logoLiquidDarkHorizontal}
+                  alt="PayTracker Liquid Glass Dark Logo"
+                  className="h-9 sm:h-10 w-auto object-contain hidden dark:block drop-shadow-md"
+                />
+                {/* 3D Liquid Glass Light Mode Logo */}
+                <img
+                  src={logoLiquidLightHorizontal}
+                  alt="PayTracker Liquid Glass Light Logo"
+                  className="h-9 sm:h-10 w-auto object-contain block dark:hidden drop-shadow-xs"
+                />
+              </>
+            ) : (
+              <>
+                {/* Standard Dark Mode Logo */}
+                <img
+                  src={logoHorizontal}
+                  alt="PayTracker Dark Logo"
+                  className="h-9 sm:h-10 w-auto object-contain hidden dark:block"
+                />
+                {/* Standard Light Mode Logo */}
+                <img
+                  src={logoLightHorizontal}
+                  alt="PayTracker Light Logo"
+                  className="h-9 sm:h-10 w-auto object-contain block dark:hidden"
+                />
+              </>
+            )}
           </div>
 
           {/* Month Selector Pill */}

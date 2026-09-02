@@ -1,4 +1,5 @@
 import React from 'react';
+import { PiggyBank, Receipt } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { formatCurrency } from '../utils/formatters';
 
@@ -28,8 +29,8 @@ export const OverviewCard: React.FC = () => {
         </div>
       </div>
 
-      {/* Metrics 3-Column Display */}
-      <div className="grid grid-cols-3 gap-2.5 mb-4">
+      {/* Primary Metrics 3-Column Display */}
+      <div className="grid grid-cols-3 gap-2.5 mb-3">
         {/* Total */}
         <div className={`p-3 rounded-2xl ${
           isLiquidGlass
@@ -70,6 +71,47 @@ export const OverviewCard: React.FC = () => {
           <span className="text-sm sm:text-base font-black text-amber-600 dark:text-orange-400 tracking-tight block">
             {formatCurrency(summary.pendingAmount)}
           </span>
+        </div>
+      </div>
+
+      {/* Total Savings & Total Expense 2-Column Display */}
+      <div className="grid grid-cols-2 gap-2.5 mb-4">
+        {/* Total Savings */}
+        <div className={`p-3 rounded-2xl flex items-center justify-between ${
+          isLiquidGlass
+            ? 'bg-emerald-500/15 dark:bg-emerald-950/40 border border-emerald-400/40 backdrop-blur-md'
+            : 'bg-emerald-50/80 dark:bg-teal-950/50 border border-emerald-200/80 dark:border-teal-800/60'
+        }`}>
+          <div>
+            <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block mb-0.5">
+              Total Savings
+            </span>
+            <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-300 tracking-tight block">
+              {formatCurrency(summary.totalSavings)}
+            </span>
+          </div>
+          <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+            <PiggyBank className="w-4 h-4 stroke-[2.5]" />
+          </div>
+        </div>
+
+        {/* Total Expense */}
+        <div className={`p-3 rounded-2xl flex items-center justify-between ${
+          isLiquidGlass
+            ? 'bg-orange-500/15 dark:bg-orange-950/40 border border-orange-400/40 backdrop-blur-md'
+            : 'bg-orange-50/80 dark:bg-orange-950/50 border border-orange-200/80 dark:border-orange-800/60'
+        }`}>
+          <div>
+            <span className="text-[10px] font-black text-orange-700 dark:text-orange-300 uppercase tracking-wider block mb-0.5">
+              Total Expense
+            </span>
+            <span className="text-sm sm:text-base font-black text-orange-700 dark:text-orange-300 tracking-tight block">
+              {formatCurrency(summary.totalExpense)}
+            </span>
+          </div>
+          <div className="p-2 rounded-xl bg-orange-100 dark:bg-orange-900/60 text-orange-700 dark:text-orange-300">
+            <Receipt className="w-4 h-4 stroke-[2.5]" />
+          </div>
         </div>
       </div>
 

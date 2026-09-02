@@ -53,47 +53,50 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
       } ${payment.isPaid ? 'opacity-85' : ''}`}
     >
       {/* Left Icon & Details */}
-      <div className="flex items-center space-x-3.5 min-w-0 pr-2">
+      <div className="flex items-start space-x-3.5 min-w-0 pr-2 flex-1">
         {/* Category Icon */}
         <div
-          className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${categoryMeta.colorClasses}`}
+          className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors mt-0.5 ${categoryMeta.colorClasses}`}
         >
           <IconComponent className="w-5 h-5 stroke-[2.2]" />
         </div>
 
         {/* Text Details Stack */}
-        <div className="min-w-0 space-y-1.5">
-          {/* Row 1: Commitment Name & Urgency Tag */}
-          <div className="flex items-center space-x-2">
-            <h4
-              className={`font-black text-base tracking-tight truncate ${
-                payment.isPaid
-                  ? 'text-slate-500 dark:text-slate-400 line-through decoration-slate-400'
-                  : 'text-slate-900 dark:text-white'
-              }`}
-            >
-              {payment.name}
-            </h4>
+        <div className="min-w-0 space-y-1 flex-1">
+          {/* Row 1: Full Commitment Name */}
+          <h4
+            className={`font-black text-base tracking-tight leading-snug break-words ${
+              payment.isPaid
+                ? 'text-slate-500 dark:text-slate-400 line-through decoration-slate-400'
+                : 'text-slate-900 dark:text-white'
+            }`}
+          >
+            {payment.name}
+          </h4>
+
+          {/* Row 2: Below Full Name - Due Date, Category, Urgency & Payment Details */}
+          <div className="flex items-center space-x-2 gap-y-1.5 flex-wrap text-xs pt-0.5">
+            {/* Due Date Indicator */}
+            <span className="inline-flex items-center space-x-1 text-[11px] font-black text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-lg border border-slate-200/80 dark:border-slate-700/60 shrink-0">
+              <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-orange-400 shrink-0 stroke-[2.5]" />
+              <span>{formatDueDay(payment.dueDay)}</span>
+            </span>
+
+            {/* Category Badge */}
+            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${categoryMeta.colorClasses}`}>
+              {categoryMeta.label}
+            </span>
 
             {/* Urgency Badge */}
             <span className={`text-[10px] px-2.5 py-0.5 rounded-full shrink-0 font-black ${urgency.colorClass}`}>
               {urgency.label}
             </span>
-          </div>
 
-          {/* Row 2: Ample Spacing Between Due Date, Payment Mode (Account) & Notes */}
-          <div className="flex items-center space-x-3 gap-y-1 flex-wrap text-xs pt-0.5">
-            {/* Due Date Indicator */}
-            <span className="inline-flex items-center space-x-1 text-[11px] font-black text-slate-800 dark:text-slate-100 pr-1">
-              <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-orange-400 shrink-0 stroke-[2.5]" />
-              <span>{formatDueDay(payment.dueDay)}</span>
-            </span>
-
-            {/* Linked Account (Payment Mode) Badge */}
+            {/* Linked Account Badge */}
             {linkedAccount && (
-              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shrink-0 ${
                 isLiquidGlass
-                  ? 'bg-white/80 text-slate-950 dark:bg-white dark:text-slate-950 border-white font-black shadow-2xs'
+                  ? 'bg-slate-900/10 dark:bg-white/15 text-slate-800 dark:text-slate-100 border-slate-300/50 dark:border-white/20 shadow-2xs backdrop-blur-md'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700'
               }`}>
                 {linkedAccount.name}
@@ -102,7 +105,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
 
             {/* Notes */}
             {payment.notes && (
-              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[130px]">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[160px]">
                 • {payment.notes}
               </span>
             )}

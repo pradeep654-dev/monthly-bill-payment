@@ -15,7 +15,7 @@ export const NavBar: React.FC = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none pb-safe">
       {/* Ambient gradient shadow behind navbar to preserve readability while maintaining glass transparency */}
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 via-black/30 to-transparent pointer-events-none -z-10" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-200/40 dark:from-black/80 via-slate-100/20 dark:via-black/40 to-transparent pointer-events-none -z-10" />
 
       <div className="max-w-md mx-auto px-4 pb-3">
         <div className={`pointer-events-auto relative overflow-hidden rounded-[28px] p-2 shadow-2xl flex items-center justify-around border transition-all duration-300 ${

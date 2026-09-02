@@ -3,6 +3,7 @@ import type { PaymentItem, PaymentTemplate, PaymentMethod, MonthSummary, ThemeMo
 import { INITIAL_MONTH, DEFAULT_TEMPLATES, INITIAL_PAYMENTS_SEPT_2026, DEFAULT_PAYMENT_METHODS } from '../data/initialData';
 import { getMonthName, getNextMonthKey, getPrevMonthKey } from '../utils/formatters';
 import { pushToCloudSync, fetchLatestCloudSync, subscribeToCloudEvents } from '../utils/cloudSync';
+import { CATEGORY_MAP } from '../utils/categories';
 
 interface PaymentContextType {
   currentMonthKey: string;
@@ -473,6 +474,14 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const percentagePaid = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
     const paidCount = currentMonthPayments.filter(p => p.isPaid).length;
 
+    const totalSavings = currentMonthPayments
+      .filter(p => CATEGORY_MAP[p.category]?.group === 'savings')
+      .reduce((acc, p) => acc + p.amount, 0);
+
+    const totalExpense = currentMonthPayments
+      .filter(p => CATEGORY_MAP[p.category]?.group !== 'savings')
+      .reduce((acc, p) => acc + p.amount, 0);
+
     return {
       monthKey: currentMonthKey,
       monthName: getMonthName(currentMonthKey),
@@ -481,7 +490,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       pendingAmount,
       percentagePaid,
       totalCount: currentMonthPayments.length,
-      paidCount
+      paidCount,
+      totalSavings,
+      totalExpense
     };
   }, [currentMonthPayments, currentMonthKey]);
 
@@ -498,6 +509,14 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const percentagePaid = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
       const paidCount = monthItems.filter(p => p.isPaid).length;
 
+      const totalSavings = monthItems
+        .filter(p => CATEGORY_MAP[p.category]?.group === 'savings')
+        .reduce((acc, p) => acc + p.amount, 0);
+
+      const totalExpense = monthItems
+        .filter(p => CATEGORY_MAP[p.category]?.group !== 'savings')
+        .reduce((acc, p) => acc + p.amount, 0);
+
       return {
         monthKey: mKey,
         monthName: getMonthName(mKey),
@@ -506,7 +525,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         pendingAmount,
         percentagePaid,
         totalCount: monthItems.length,
-        paidCount
+        paidCount,
+        totalSavings,
+        totalExpense
       };
     });
   }, [payments]);

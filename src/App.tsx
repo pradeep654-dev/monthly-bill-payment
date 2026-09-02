@@ -37,7 +37,7 @@ const MainContent: React.FC = () => {
       {/* Mobile Shell Container */}
       <div className={`w-full max-w-md mx-auto h-full flex flex-col relative z-10 shadow-2xl overflow-hidden border-x ${
         isLiquidGlass 
-          ? 'border-white/40 dark:border-white/10 backdrop-blur-md dark:bg-black/40' 
+          ? 'border-white/40 dark:border-white/10 backdrop-blur-md dark:bg-black' 
           : 'bg-slate-50 dark:bg-[#000000] border-slate-200/50 dark:border-slate-800/40'
       }`}>
         

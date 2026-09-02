@@ -1,11 +1,19 @@
 export type CategoryType = 
+  | 'savings'
+  | 'expense'
   | 'housing' 
   | 'utilities' 
   | 'internet' 
   | 'finance' 
   | 'investment' 
   | 'family' 
+  | 'food'
+  | 'healthcare'
+  | 'education'
+  | 'travel'
+  | 'shopping'
   | 'entertainment' 
+  | 'insurance'
   | 'other';
 
 export type AccountType = 'bank' | 'wallet' | 'card' | 'cash';
@@ -57,6 +65,8 @@ export interface MonthSummary {
   percentagePaid: number;
   totalCount: number;
   paidCount: number;
+  totalSavings: number;
+  totalExpense: number;
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';

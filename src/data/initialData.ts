@@ -85,7 +85,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     name: 'Sukanya Yojana',
     amount: 2000,
     dueDay: 10,
-    category: 'family',
+    category: 'savings',
     paymentMethodId: 'pm-3',
     isRecurring: true,
     notes: 'Post office savings scheme'
@@ -169,7 +169,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     name: 'Sukanya Yojana',
     amount: 2000,
     dueDay: 10,
-    category: 'family',
+    category: 'savings',
     paymentMethodId: 'pm-3',
     isRecurring: true,
     isPaid: false,

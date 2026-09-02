@@ -215,7 +215,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Category & Icon
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="max-h-52 overflow-y-auto pr-1 p-0.5 grid grid-cols-4 gap-2 border border-slate-100 dark:border-slate-800/80 rounded-2xl bg-slate-50/50 dark:bg-[#0D1117]/50">
               {(Object.keys(CATEGORY_MAP) as CategoryType[]).map(catKey => {
                 const meta = CATEGORY_MAP[catKey];
                 const IconComp = meta.icon;
@@ -233,7 +233,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     }`}
                   >
                     <IconComp className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] leading-tight text-center truncate w-full">
+                    <span className="text-[10px] leading-tight text-center truncate w-full font-bold">
                       {meta.label.split(' ')[0]}
                     </span>
                   </button>

@@ -22,7 +22,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
-    <div className="mt-4 bg-white dark:bg-[#161B26] border border-slate-100 dark:border-slate-800 rounded-3xl p-4 shadow-xs">
+    <div className="mt-4 app-card rounded-[24px] p-4">
       <div className="flex items-center justify-between mb-3">
         <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200 tracking-tight">
           Monthly Commitment Calendar

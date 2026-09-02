@@ -88,7 +88,7 @@ export const PaymentAccountsBar: React.FC = () => {
             <div
               key={method.id}
               onClick={() => openEditModal(method)}
-              className="app-card rounded-[22px] p-4 min-w-[160px] shrink-0 cursor-pointer active:scale-95 transition-all duration-200 border border-white/20 dark:bg-[#080E1B]"
+              className="app-card rounded-[22px] p-4 min-w-[175px] shrink-0 cursor-pointer active:scale-95 transition-all duration-200 border border-white/20 dark:bg-[#080E1B]"
             >
               <div className="flex items-center justify-between mb-2.5">
                 {/* Deep White Icon Capsule */}
