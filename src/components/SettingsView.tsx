@@ -15,10 +15,7 @@ import {
   RefreshCw,
   Key,
   WifiOff,
-  Sparkles,
-  Zap,
-  Copy,
-  MessageSquare
+  Sparkles
 } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 
@@ -34,9 +31,7 @@ export const SettingsView: React.FC = () => {
     cloudSyncCode,
     isCloudSyncActive,
     enableCloudSync,
-    disableCloudSync,
-    triggerShortcutAction,
-    showToast
+    disableCloudSync
   } = usePayments();
 
   const [importMessage, setImportMessage] = useState<{ text: string; success: boolean } | null>(null);
@@ -320,115 +315,6 @@ export const SettingsView: React.FC = () => {
             </button>
           </form>
         )}
-      </div>
-
-      {/* iPhone Auto Transaction Update (100% Free) Section */}
-      <div className="app-card p-5 shadow-xs space-y-3.5 border-2 border-emerald-500/20 dark:border-orange-500/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 dark:text-amber-400">
-              <Zap className="w-5 h-5 fill-amber-400" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-1.5">
-                iPhone Auto Transaction Update
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
-                  100% Free
-                </span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Auto-record transactions via iOS Shortcuts & Bank SMS
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Simulator / Tester */}
-        <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-[#090D12] border border-slate-200/80 dark:border-slate-800 space-y-2.5">
-          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-            <span>⚡ Test iPhone Auto-Update Right Now:</span>
-            <span className="text-[10px] text-slate-400 font-normal">Click to test instant sync</span>
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => {
-                triggerShortcutAction({
-                  action: 'add_payment',
-                  name: 'Starbucks Coffee',
-                  amount: 6.5,
-                  category: 'food',
-                  status: 'paid'
-                });
-              }}
-              className="py-2.5 px-3 rounded-xl bg-emerald-600 dark:bg-orange-500 text-white font-bold text-[11px] hover:opacity-90 transition-opacity text-center truncate shadow-xs"
-            >
-              + Auto-Add $6.50 Coffee
-            </button>
-            <button
-              onClick={() => {
-                triggerShortcutAction({
-                  action: 'mark_paid',
-                  name: 'Electricity'
-                });
-              }}
-              className="py-2.5 px-3 rounded-xl bg-blue-600 text-white font-bold text-[11px] hover:opacity-90 transition-opacity text-center truncate shadow-xs"
-            >
-              ✓ Mark Electricity Paid
-            </button>
-          </div>
-        </div>
-
-        {/* Setup Option 1: URL Action Links */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200/80 dark:border-slate-800 space-y-2">
-          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
-            <Smartphone className="w-4 h-4 text-emerald-500" />
-            <span>Option 1: 1-Tap Siri & Home Screen Shortcuts</span>
-          </h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            Create an iOS Shortcut with an <strong>"Open URL"</strong> action using these URL parameters:
-          </p>
-          <div className="p-2.5 rounded-xl bg-slate-900 text-slate-200 text-[10px] font-mono select-all break-all border border-slate-800">
-            {window.location.origin + window.location.pathname}?action=add_payment&name=Coffee&amount=5&category=food&status=paid
-          </div>
-          <button
-            onClick={() => {
-              const link = `${window.location.origin}${window.location.pathname}?action=add_payment&name=Coffee&amount=5&category=food&status=paid`;
-              navigator.clipboard.writeText(link);
-              showToast('Copied iPhone Shortcut URL to clipboard!');
-            }}
-            className="w-full py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center space-x-1.5 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            <span>Copy iOS Shortcut URL Parameter</span>
-          </button>
-        </div>
-
-        {/* Setup Option 2: Bank SMS Auto-Webhook */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200/80 dark:border-slate-800 space-y-2">
-          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
-            <MessageSquare className="w-4 h-4 text-blue-500" />
-            <span>Option 2: Automatic Bank SMS / UPI Tracker</span>
-          </h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            In iPhone <strong>Shortcuts App &gt; Automations &gt; Message</strong>:
-          </p>
-          <ol className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5 list-decimal list-inside font-medium">
-            <li>Set trigger when SMS with <code className="text-amber-600 dark:text-amber-400 font-bold">debited</code> or <code className="text-amber-600 dark:text-amber-400 font-bold">paid</code> arrives.</li>
-            <li>Add Action: <strong>Get Contents of URL</strong> (HTTP POST).</li>
-            <li>
-              Post Webhook URL:
-              <span className="block mt-0.5 font-mono text-[10px] text-blue-600 dark:text-blue-400 break-all">
-                https://ntfy.sh/paytracker_sync_{cloudSyncCode || 'your_sync_key'}
-              </span>
-            </li>
-            <li>
-              Request Body (JSON):
-              <code className="block mt-1 p-2 rounded bg-slate-900 text-emerald-400 font-mono text-[10px]">
-                {`{"action": "add_payment", "name": "Bank SMS Expense", "amount": 25}`}
-              </code>
-            </li>
-          </ol>
-        </div>
       </div>
 
       {/* PWA Install Section */}

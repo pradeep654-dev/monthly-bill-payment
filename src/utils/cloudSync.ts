@@ -72,19 +72,12 @@ export const subscribeToCloudEvents = (
       try {
         const parsedObj = JSON.parse(event.data);
         if (parsedObj.message) {
-          const payload = typeof parsedObj.message === 'string' ? JSON.parse(parsedObj.message) : parsedObj.message;
+          const payload = JSON.parse(parsedObj.message);
           if (Array.isArray(payload.payments)) {
             onData({
               payments: payload.payments,
               templates: Array.isArray(payload.templates) ? payload.templates : []
             });
-          } else if (payload.action === 'shortcut_event' || payload.action === 'add_payment' || payload.action === 'mark_paid') {
-            // Forward event payload if subscriber supports it
-            onData({
-              payments: [],
-              templates: [],
-              eventPayload: payload
-            } as any);
           }
         }
       } catch (e) {
@@ -100,29 +93,5 @@ export const subscribeToCloudEvents = (
   } catch (e) {
     console.error('Failed to create EventSource:', e);
     return null;
-  }
-};
-
-export const pushShortcutEventToCloud = async (
-  syncCode: string,
-  eventPayload: { action: 'add_payment' | 'mark_paid'; name: string; amount?: number; category?: string; status?: string }
-): Promise<boolean> => {
-  const cleanCode = syncCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-  if (!cleanCode) return false;
-
-  const topicUrl = `https://ntfy.sh/paytracker_sync_${cleanCode}`;
-  try {
-    const response = await fetch(topicUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        timestamp: new Date().toISOString(),
-        ...eventPayload
-      })
-    });
-    return response.ok;
-  } catch (e) {
-    console.error('Shortcut event push error:', e);
-    return false;
   }
 };

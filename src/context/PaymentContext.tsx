@@ -41,11 +41,6 @@ interface PaymentContextType {
   isCloudSyncActive: boolean;
   enableCloudSync: (syncCode: string) => Promise<boolean>;
   disableCloudSync: () => void;
-
-  // iPhone Shortcut / Auto-Update Toast & Action
-  toastMessage: string | null;
-  showToast: (msg: string) => void;
-  triggerShortcutAction: (actionData: { action: 'add_payment' | 'mark_paid'; name: string; amount?: number; category?: string; status?: string }) => void;
 }
 
 const STORAGE_KEY_PAYMENTS = 'paytracker_payments_v1';
@@ -173,100 +168,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(templates));
   }, [templates]);
 
-  // Toast Message State for iPhone Automations
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(prev => (prev === msg ? null : prev));
-    }, 4000);
-  };
-
-  const triggerShortcutAction = (actionData: {
-    action: 'add_payment' | 'mark_paid';
-    name: string;
-    amount?: number;
-    category?: string;
-    status?: string;
-  }) => {
-    const name = actionData.name.trim();
-    if (!name) return;
-
-    if (actionData.action === 'add_payment') {
-      const amount = actionData.amount && !isNaN(actionData.amount) ? actionData.amount : 0;
-      const category = (actionData.category || 'other') as any;
-      const isPaid = actionData.status === 'paid';
-      const today = new Date();
-      const currentDay = today.getDate();
-      const newId = `pay-${currentMonthKey}-${Date.now()}`;
-
-      const newItem: PaymentItem = {
-        id: newId,
-        name,
-        amount,
-        dueDay: currentDay,
-        category,
-        isRecurring: false,
-        isPaid,
-        paidAt: isPaid ? new Date().toISOString() : null,
-        monthKey: currentMonthKey,
-        notes: '⚡ Auto-added via iPhone Shortcut'
-      };
-
-      setPayments(prev => [...prev, newItem]);
-      showToast(`⚡ iPhone Auto-Added: ${name} (${amount > 0 ? '$' + amount : 'Pending'})`);
-    } else if (actionData.action === 'mark_paid') {
-      const lowerName = name.toLowerCase();
-      let matched = false;
-
-      setPayments(prev =>
-        prev.map(item => {
-          if (item.monthKey === currentMonthKey && item.name.toLowerCase().includes(lowerName)) {
-            matched = true;
-            return {
-              ...item,
-              isPaid: true,
-              paidAt: new Date().toISOString()
-            };
-          }
-          return item;
-        })
-      );
-
-      if (matched) {
-        showToast(`⚡ iPhone Auto-Marked Paid: "${name}"`);
-      } else {
-        showToast(`⚠️ iPhone Shortcut: No bill named "${name}" found in ${currentMonthKey}`);
-      }
-    }
-  };
-
-  // Parse URL Parameters on startup for iPhone Shortcuts
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const action = params.get('action');
-      const name = params.get('name');
-
-      if (action && name) {
-        if (action === 'add_payment' || action === 'add') {
-          const amount = parseFloat(params.get('amount') || '0');
-          const category = params.get('category') || 'other';
-          const status = params.get('status') || (params.get('isPaid') === 'true' ? 'paid' : 'unpaid');
-          triggerShortcutAction({ action: 'add_payment', name, amount, category, status });
-        } else if (action === 'mark_paid' || action === 'pay') {
-          triggerShortcutAction({ action: 'mark_paid', name });
-        }
-
-        const cleanUrl = window.location.pathname + window.location.hash;
-        window.history.replaceState({}, document.title, cleanUrl);
-      }
-    } catch (e) {
-      console.error('Failed to parse URL query params:', e);
-    }
-  }, []);
-
   // Real-time Cloud Sync Event Listener
   useEffect(() => {
     if (isCloudSyncActive && cloudSyncCode) {
@@ -283,7 +184,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       });
 
-      const unsub = subscribeToCloudEvents(cloudSyncCode, (cloudData: any) => {
+      const unsub = subscribeToCloudEvents(cloudSyncCode, cloudData => {
         if (cloudData.payments && cloudData.payments.length > 0) {
           isRemoteUpdatingRef.current = true;
           setPayments(cloudData.payments);
@@ -293,17 +194,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setTimeout(() => {
             isRemoteUpdatingRef.current = false;
           }, 200);
-        } else if (cloudData.eventPayload) {
-          const ep = cloudData.eventPayload;
-          if (ep.action === 'add_payment' || ep.action === 'mark_paid') {
-            triggerShortcutAction({
-              action: ep.action,
-              name: ep.name,
-              amount: ep.amount,
-              category: ep.category,
-              status: ep.status
-            });
-          }
         }
       });
 
@@ -311,7 +201,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (unsub) unsub();
       };
     }
-  }, [isCloudSyncActive, cloudSyncCode, currentMonthKey]);
+  }, [isCloudSyncActive, cloudSyncCode]);
 
   // Auto-initialize recurring payments for a new month
   useEffect(() => {
@@ -673,10 +563,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         cloudSyncCode,
         isCloudSyncActive,
         enableCloudSync,
-        disableCloudSync,
-        toastMessage,
-        showToast,
-        triggerShortcutAction
+        disableCloudSync
       }}
     >
       {children}

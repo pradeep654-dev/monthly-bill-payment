@@ -12,7 +12,7 @@ import { PaymentModal } from './components/PaymentModal';
 import type { PaymentItem } from './types';
 
 const MainContent: React.FC = () => {
-  const { activeTab, deletePayment, isLiquidGlass, toastMessage } = usePayments();
+  const { activeTab, deletePayment, isLiquidGlass } = usePayments();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentItem | null>(null);
 
@@ -41,15 +41,6 @@ const MainContent: React.FC = () => {
           : 'bg-slate-50 dark:bg-[#000000] border-slate-200/50 dark:border-slate-800/40'
       }`}>
         
-        {/* Toast Alert Banner for iPhone Auto Updates */}
-        {toastMessage && (
-          <div className="absolute top-16 left-4 right-4 z-50 animate-bounce transition-all">
-            <div className="p-3.5 rounded-2xl bg-emerald-600 dark:bg-orange-500 text-white font-bold text-xs shadow-xl flex items-center justify-between border border-white/20 backdrop-blur-md">
-              <span className="truncate">{toastMessage}</span>
-            </div>
-          </div>
-        )}
-
         {/* Header */}
         <Header />
 
