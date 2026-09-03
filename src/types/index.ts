@@ -79,6 +79,9 @@ export interface MonthSummary {
   totalBankBalance: number;
   netFreeLiquidity: number;
   monthlyIncome: number;
+  salarySplitPercent: number;
+  sbiSplitAmount: number;
+  hdfcSplitAmount: number;
   leftoverIncome: number;
   mandatoryTotal: number;
   discretionaryTotal: number;

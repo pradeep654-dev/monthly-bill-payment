@@ -42,6 +42,9 @@ interface PaymentContextType {
   updatePaymentMethod: (id: string, data: Partial<PaymentMethod>) => void;
   deletePaymentMethod: (id: string) => void;
   fundMonth: (amount?: number) => void;
+  salarySplitPercent: number;
+  updateSalarySettings: (income: number, splitPercent: number) => void;
+  runSalaryCreditAndSplit: (incomeAmt?: number, splitPct?: number) => void;
 
   // Category Budgets state & methods
   categoryBudgets: CategoryBudgets;
@@ -667,33 +670,47 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return 'normal';
   }, [exceededCategoriesCount, categoryBudgetSummaries]);
 
-  // Monthly Income State (Default 80,000 INR)
+  // Monthly Income & Salary Split Engine State
   const [monthlyIncome, setMonthlyIncome] = useState<number>(80000);
+  const [salarySplitPercent, setSalarySplitPercent] = useState<number>(50); // Default 50% SBI / 50% HDFC
   const [salaryCreditedMonths, setSalaryCreditedMonths] = useState<string[]>([]);
 
-  // Auto-credit ₹80,000 Salary on 1st of month to primary HDFC bank account
+  // Function to execute Salary Credit to SBI & Auto-Split to HDFC
+  const runSalaryCreditAndSplit = (incomeAmt: number = monthlyIncome, splitPct: number = salarySplitPercent) => {
+    const sbiShare = Math.round((incomeAmt * (100 - splitPct)) / 100);
+    const hdfcShare = Math.round((incomeAmt * splitPct) / 100);
+
+    setPaymentMethods(methods => {
+      const hasSbi = methods.some(m => m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi'));
+      const hasHdfc = methods.some(m => m.id === 'pm-1' || m.name.toLowerCase().includes('hdfc'));
+
+      return methods.map(m => {
+        if (m.id === 'pm-sbi' || (hasSbi && m.name.toLowerCase().includes('sbi'))) {
+          return { ...m, balance: m.balance + sbiShare, initialBalance: m.initialBalance + sbiShare };
+        }
+        if (m.id === 'pm-1' || (hasHdfc && m.name.toLowerCase().includes('hdfc'))) {
+          return { ...m, balance: m.balance + hdfcShare, initialBalance: m.initialBalance + hdfcShare };
+        }
+        return m;
+      });
+    });
+  };
+
+  // Auto-credit Salary to SBI and 50% Auto-Split to HDFC on 1st of month
   useEffect(() => {
     if (!salaryCreditedMonths.includes(currentMonthKey)) {
-      setPaymentMethods(methods =>
-        methods.map(m =>
-          m.id === 'pm-1' || m.type === 'bank'
-            ? { ...m, balance: m.balance + monthlyIncome, initialBalance: m.initialBalance + monthlyIncome }
-            : m
-        )
-      );
+      runSalaryCreditAndSplit(monthlyIncome, salarySplitPercent);
       setSalaryCreditedMonths(prev => [...prev, currentMonthKey]);
     }
-  }, [currentMonthKey, monthlyIncome, salaryCreditedMonths]);
+  }, [currentMonthKey, monthlyIncome, salarySplitPercent, salaryCreditedMonths]);
 
-  const fundMonth = (amount: number = 80000) => {
-    setMonthlyIncome(amount);
-    setPaymentMethods(methods =>
-      methods.map(m =>
-        m.id === 'pm-1' || m.type === 'bank'
-          ? { ...m, balance: m.balance + amount }
-          : m
-      )
-    );
+  const updateSalarySettings = (newIncome: number, newSplitPercent: number) => {
+    setMonthlyIncome(newIncome);
+    setSalarySplitPercent(newSplitPercent);
+  };
+
+  const fundMonth = (amount: number = monthlyIncome) => {
+    runSalaryCreditAndSplit(amount, salarySplitPercent);
   };
 
   // Total liquid bank balance across all payment methods
@@ -729,6 +746,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const leftoverIncome = Math.max(0, monthlyIncome - totalAmount);
     const survivalRunwayMonths = mandatoryTotal > 0 ? Number((totalBankBalance / mandatoryTotal).toFixed(1)) : 12;
 
+    const hdfcSplitAmount = Math.round((monthlyIncome * salarySplitPercent) / 100);
+    const sbiSplitAmount = monthlyIncome - hdfcSplitAmount;
+
     return {
       monthKey: currentMonthKey,
       monthName: getMonthName(currentMonthKey),
@@ -743,12 +763,15 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       totalBankBalance,
       netFreeLiquidity,
       monthlyIncome,
+      salarySplitPercent,
+      sbiSplitAmount,
+      hdfcSplitAmount,
       leftoverIncome,
       mandatoryTotal,
       discretionaryTotal,
       survivalRunwayMonths
     };
-  }, [currentMonthPayments, currentMonthKey, totalBankBalance, monthlyIncome]);
+  }, [currentMonthPayments, currentMonthKey, totalBankBalance, monthlyIncome, salarySplitPercent]);
 
   // Summaries of all unique months with records
   const allMonthSummaries: MonthSummary[] = useMemo(() => {
@@ -780,6 +803,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const leftoverIncome = Math.max(0, monthlyIncome - totalAmount);
       const survivalRunwayMonths = mandatoryTotal > 0 ? Number((totalBankBalance / mandatoryTotal).toFixed(1)) : 12;
 
+      const hdfcSplitAmount = Math.round((monthlyIncome * salarySplitPercent) / 100);
+      const sbiSplitAmount = monthlyIncome - hdfcSplitAmount;
+
       return {
         monthKey: mKey,
         monthName: getMonthName(mKey),
@@ -794,6 +820,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         totalBankBalance,
         netFreeLiquidity,
         monthlyIncome,
+        salarySplitPercent,
+        sbiSplitAmount,
+        hdfcSplitAmount,
         leftoverIncome,
         mandatoryTotal,
         discretionaryTotal,
@@ -822,6 +851,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updatePaymentMethod,
         deletePaymentMethod,
         fundMonth,
+        salarySplitPercent,
+        updateSalarySettings,
+        runSalaryCreditAndSplit,
         categoryBudgets,
         categoryBudgetSummaries,
         totalBudget,

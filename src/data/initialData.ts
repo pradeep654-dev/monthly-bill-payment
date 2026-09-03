@@ -5,18 +5,26 @@ export const INITIAL_MONTH = '2026-09';
 
 export const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
   {
+    id: 'pm-sbi',
+    name: 'SBI Bank (Salary Account)',
+    type: 'bank',
+    balance: 40000,
+    initialBalance: 40000,
+    color: 'cyan'
+  },
+  {
     id: 'pm-1',
     name: 'HDFC Bank Account',
     type: 'bank',
-    balance: 60000, // Initial 75,000 minus Rent 15,000
-    initialBalance: 75000,
+    balance: 60000,
+    initialBalance: 60000,
     color: 'blue'
   },
   {
     id: 'pm-2',
     name: 'GPay / PhonePe UPI',
     type: 'wallet',
-    balance: 11500, // Initial 15,000 minus Electricity 2,500 & Internet 1,000
+    balance: 11500,
     initialBalance: 15000,
     color: 'emerald'
   },
