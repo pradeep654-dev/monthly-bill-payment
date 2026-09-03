@@ -182,9 +182,6 @@ export const PaymentList: React.FC<PaymentListProps> = ({
                       <h4 className="font-black text-slate-900 dark:text-white text-sm">
                         🏦 Savings & Investments
                       </h4>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-black">
-                        AUTO EVERY MONTH
-                      </span>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                       Automatically carried forward every month ({savingsItems.length} items)

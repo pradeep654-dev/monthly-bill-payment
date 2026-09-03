@@ -1,5 +1,5 @@
 import React from 'react';
-import { PiggyBank, Plus, Repeat } from 'lucide-react';
+import { PiggyBank, Plus } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { PaymentItemCard } from './PaymentItemCard';
 import type { PaymentItem } from '../types';
@@ -101,15 +101,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
             </span>
           </div>
 
-          <div className="text-right space-y-1">
-            <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
-              isLiquidGlass
-                ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-400/30'
-                : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
-            }`}>
-              <Repeat className="w-3 h-3" />
-              <span>AUTO EVERY MONTH</span>
-            </span>
+          <div className="text-right">
             <span className={`block text-[11px] font-bold ${
               isLiquidGlass
                 ? 'text-slate-600 dark:text-slate-300'
