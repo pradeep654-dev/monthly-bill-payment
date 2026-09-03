@@ -26,7 +26,46 @@ export const processAiPrompt = (
 ): ParsedAiAction => {
   const clean = prompt.trim().toLowerCase();
 
-  // 1. QUERY INTENTS
+  // 1. SMART BUDGET & REMAINING INCOME ALLOCATION INTENT
+  if (
+    clean.includes('budget') || 
+    clean.includes('suggest') || 
+    clean.includes('rest amount') || 
+    clean.includes('remaining') || 
+    clean.includes('allocate') || 
+    clean.includes('plan') ||
+    clean.includes('fixed expens')
+  ) {
+    const income = summary.monthlyIncome || 80000;
+    const fixedExpenses = summary.totalAmount;
+    const leftover = Math.max(0, summary.leftoverIncome || (income - fixedExpenses));
+
+    const wealthAmt = Math.round(leftover * 0.40);
+    const groceryAmt = Math.round(leftover * 0.30);
+    const lifestyleAmt = Math.round(leftover * 0.20);
+    const reserveAmt = leftover - (wealthAmt + groceryAmt + lifestyleAmt);
+
+    return {
+      type: 'query',
+      replyMessage: `💡 **Personalized Monthly Budget Plan for your ${formatCurrency(leftover)} Leftover Cash**:\n\n` +
+        `• 💵 **Total Payday Income**: ${formatCurrency(income)}\n` +
+        `• 🔒 **Mandatory Fixed Expenses & SIPs**: ${formatCurrency(fixedExpenses)} (${summary.totalCount} active items)\n` +
+        `• 💰 **Remaining Disposable Cash**: **${formatCurrency(leftover)}**\n\n` +
+        `---\n` +
+        `📊 **Recommended Allocation for your Remaining ${formatCurrency(leftover)}**:\n\n` +
+        `1. 🏦 **Extra Wealth & SIP Investments (40%)**: **${formatCurrency(wealthAmt)}**\n` +
+        `   *(Nifty 50 Index Fund, Sukanya Yojana, or FD Deposits)*\n` +
+        `2. 🛒 **Groceries, Household & Fuel (30%)**: **${formatCurrency(groceryAmt)}**\n` +
+        `   *(Kirana, Supermarket, Dining, Fuel)*\n` +
+        `3. 🎉 **Lifestyle & Personal Shopping (20%)**: **${formatCurrency(lifestyleAmt)}**\n` +
+        `   *(Outings, Entertainment, Personal expenses)*\n` +
+        `4. 🛡️ **Liquid Emergency Buffer (10%)**: **${formatCurrency(reserveAmt)}**\n` +
+        `   *(Kept safe in your SBI & HDFC accounts)*`,
+      badge: '🎯 Smart Budget Plan'
+    };
+  }
+
+  // 2. QUERY INTENTS
   if (clean.includes('total savings') || clean.includes('how much savings') || clean.includes('savings total')) {
     return {
       type: 'query',

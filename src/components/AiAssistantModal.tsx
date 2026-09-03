@@ -23,7 +23,7 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
     {
       id: 'welcome-1',
       sender: 'ai',
-      text: `Hello! I'm **Payri**, your smart financial assistant. Type any command in natural language and I will execute it automatically for you!\n\nExamples:\n• *"Add rent 15000 due on 5th via HDFC"*\n• *"Add SIP savings 5000 with autopay"*\n• *"Pay electricity bill"*\n• *"How much safe free cash do I have?"*`,
+      text: `Hello! I'm **Payri**, your smart financial assistant. Type any command in natural language and I will execute it automatically for you!\n\nExamples:\n• *"Create a budget plan for my remaining income"*\n• *"Add rent 15000 due on 5th via HDFC"*\n• *"Add SIP savings 5000 with autopay"*\n• *"How much safe free cash do I have?"*`,
       badge: '✨ Payri AI',
       timestamp: 'Just now'
     }
@@ -32,10 +32,11 @@ export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ isOpen, onCl
   if (!isOpen) return null;
 
   const suggestedPrompts = [
+    'Create budget plan for remaining income',
+    'Suggest expense plan for rest amount',
     'Add Rent 15,000 due on 5th',
     'Add SIP 5,000 with Autopay',
-    'How much safe free cash do I have?',
-    'What bills are pending?'
+    'How much safe free cash do I have?'
   ];
 
   const handleSend = (textToSend?: string) => {
