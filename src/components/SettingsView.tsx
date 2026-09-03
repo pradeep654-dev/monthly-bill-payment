@@ -16,9 +16,14 @@ import {
   Key,
   WifiOff,
   Sparkles,
-  Target
+  Target,
+  Banknote,
+  Sliders,
+  ArrowRightLeft
 } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
+import { SalarySettingsModal } from './SalarySettingsModal';
+import { formatCurrency } from '../utils/formatters';
 
 interface SettingsViewProps {
   onOpenBudgetModal?: () => void;
@@ -37,12 +42,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenBudgetModal })
     cloudSyncCode,
     isCloudSyncActive,
     enableCloudSync,
-    disableCloudSync
+    disableCloudSync,
+    summary,
+    salarySplitPercent
   } = usePayments();
 
   const [importMessage, setImportMessage] = useState<{ text: string; success: boolean } | null>(null);
   const [syncKeyInput, setSyncKeyInput] = useState('');
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // BeforeInstallPromptEvent for Android / Chrome
@@ -243,6 +251,43 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenBudgetModal })
             />
             <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
           </label>
+        </div>
+      </div>
+
+      {/* Salary Credit & Auto-Split Settings Section */}
+      <div className="app-card p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 rounded-xl bg-cyan-500 text-white shadow-sm">
+              <Banknote className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                Salary Credit & Auto-Split
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                SBI Salary ({formatCurrency(summary.monthlyIncome)}) • 50/50 HDFC Auto-Split
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsSalaryModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-black bg-cyan-500 hover:bg-cyan-600 text-white shadow-xs transition-colors shrink-0 flex items-center space-x-1"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Configure</span>
+          </button>
+        </div>
+
+        <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-between text-xs font-semibold">
+          <div className="flex items-center space-x-2">
+            <ArrowRightLeft className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+            <span>SBI: {formatCurrency(summary.sbiSplitAmount || 40000)} • HDFC: {formatCurrency(summary.hdfcSplitAmount || 40000)}</span>
+          </div>
+          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 font-black">
+            {100 - (salarySplitPercent || 50)}/{salarySplitPercent || 50} Split
+          </span>
         </div>
       </div>
 
@@ -490,6 +535,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenBudgetModal })
           </p>
         </div>
       </div>
+
+      {/* Salary Settings Modal */}
+      <SalarySettingsModal
+        isOpen={isSalaryModalOpen}
+        onClose={() => setIsSalaryModalOpen(false)}
+      />
     </div>
   );
 };
