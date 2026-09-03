@@ -91,14 +91,14 @@ const MainContent: React.FC = () => {
           {activeTab === 'settings' && <SettingsView onOpenBudgetModal={() => setIsBudgetModalOpen(true)} />}
         </main>
 
-        {/* Dynamic Theme-Adaptive Floating Round Payri AI Button */}
-        <div className="absolute bottom-26 mb-1 right-4 z-40">
+        {/* Dynamic Theme-Adaptive Floating Round Payri AI Button (Fixed for Mobile & PC) */}
+        <div className="fixed bottom-[92px] right-4 sm:right-[calc(50vw-13rem)] z-50">
           <button
             onClick={() => setIsAiModalOpen(true)}
-            className={`w-13 h-13 rounded-full flex flex-col items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 group ${
+            className={`w-13 h-13 rounded-full flex flex-col items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 shadow-2xl group ${
               isLiquidGlass
-                ? 'bg-white/40 dark:bg-white/20 backdrop-blur-xl border-2 border-white/70 dark:border-white/30 text-slate-900 dark:text-white shadow-[0_8px_25px_rgba(0,0,0,0.3)]'
-                : 'bg-gradient-to-tr from-emerald-500 via-teal-400 to-amber-400 dark:from-orange-500 dark:via-amber-400 dark:to-yellow-400 text-white shadow-xl shadow-emerald-500/30 dark:shadow-orange-500/40 border-2 border-white/80 dark:border-slate-800'
+                ? 'bg-white/70 dark:bg-black/70 backdrop-blur-2xl border-2 border-white/80 dark:border-white/30 text-slate-900 dark:text-white shadow-[0_8px_30px_rgba(0,0,0,0.5)]'
+                : 'bg-gradient-to-tr from-emerald-500 via-teal-400 to-amber-400 dark:from-orange-500 dark:via-amber-400 dark:to-yellow-400 text-white shadow-xl shadow-emerald-500/40 dark:shadow-orange-500/50 border-2 border-white/90 dark:border-slate-800'
             }`}
             title="Open Payri AI Assistant"
           >
