@@ -98,7 +98,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
           </div>
 
           {/* Paytm Brand Button with plain text 'Pay via' before the Paytm box */}
-          {!payment.isPaid && !payment.isSkipped && (
+          {!payment.isPaid && !payment.isSkipped && !payment.isAutopayEnabled && (
             <div className="flex items-center space-x-1.5 pt-0.5">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Pay via
@@ -141,7 +141,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
             {/* Autopay Badge */}
             {payment.isAutopayEnabled && (
               <span className="text-xs font-black px-3 py-1 rounded-xl shrink-0 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 flex items-center space-x-1">
-                <span>⚡ Autopay @ 11:55 PM</span>
+                <span>⚡ Auto Pay Active</span>
               </span>
             )}
 

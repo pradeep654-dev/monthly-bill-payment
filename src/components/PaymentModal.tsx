@@ -366,7 +366,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 ⚡ Autopay / Bank Auto-Debit
               </span>
               <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                Auto-mark paid at 11:55 PM on due date
+                Auto-mark paid on due date (Auto Pay Active)
               </span>
             </div>
 
