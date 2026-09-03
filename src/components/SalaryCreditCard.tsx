@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Banknote, CheckCircle2, ArrowRightLeft, Sliders } from 'lucide-react';
+import { Banknote, CheckCircle2, Sliders } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { formatCurrency } from '../utils/formatters';
 import { SalarySettingsModal } from './SalarySettingsModal';
@@ -36,24 +36,7 @@ export const SalaryCreditCard: React.FC = () => {
           </button>
         </div>
 
-        {/* 50/50 SBI -> HDFC Auto-Split Banner */}
-        <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-between gap-2">
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="p-1.5 rounded-xl bg-blue-500/20 text-blue-500 shrink-0">
-              <ArrowRightLeft className="w-4 h-4 stroke-[2.5]" />
-            </div>
-            <div className="text-xs font-extrabold text-slate-800 dark:text-slate-200 min-w-0">
-              <span className="whitespace-nowrap">Auto 50/50 Salary Split Engine</span>
-              <span className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                SBI: {formatCurrency(summary.sbiSplitAmount || 40000)} • HDFC: {formatCurrency(summary.hdfcSplitAmount || 40000)}
-              </span>
-            </div>
-          </div>
 
-          <span className="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[10px] font-black shrink-0 whitespace-nowrap">
-            {100 - (summary.salarySplitPercent || 50)}/{summary.salarySplitPercent || 50} SPLIT
-          </span>
-        </div>
 
         {/* Salary & Leftover Allocation Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
