@@ -44,6 +44,7 @@ export interface PaymentItem {
   isRecurring: boolean;
   isAutopayEnabled?: boolean; // Autopay at 11:55 PM on due date
   isMandatory?: boolean; // Mandatory survival bill vs discretionary flexible spend
+  isSkipped?: boolean; // Skipped for this month (SIP pause or deferred bill)
   notes?: string;
   isPaid: boolean;
   paidAt?: string | null;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, ArrowUpRight, Smartphone, Calendar } from 'lucide-react';
+import { Check, ArrowUpRight, Smartphone, Calendar, SkipForward } from 'lucide-react';
 import type { PaymentItem } from '../types';
 import { usePayments } from '../context/PaymentContext';
 import { getCategoryMeta } from '../utils/categories';
@@ -15,7 +15,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   payment,
   onEdit
 }) => {
-  const { togglePaid, paymentMethods, currentMonthKey, isLiquidGlass, categoryBudgetSummaries } = usePayments();
+  const { togglePaid, toggleSkip, paymentMethods, currentMonthKey, isLiquidGlass, categoryBudgetSummaries } = usePayments();
   const categoryMeta = getCategoryMeta(payment.category);
   const IconComponent = categoryMeta.icon;
 
@@ -112,6 +112,14 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
               </span>
             )}
 
+            {/* Skipped Badge */}
+            {payment.isSkipped && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-amber-500 text-white border border-amber-600 shadow-xs flex items-center space-x-1">
+                <SkipForward className="w-3 h-3" />
+                <span>Skipped for Month</span>
+              </span>
+            )}
+
             {/* Mandatory / Discretionary Tag Badge */}
             {payment.isMandatory !== false ? (
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
@@ -124,24 +132,25 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
             )}
 
             {/* Insufficient Account Balance Overdraft Warning */}
-            {!payment.isPaid && linkedAccount && payment.amount > linkedAccount.balance && (
+            {!payment.isPaid && !payment.isSkipped && linkedAccount && payment.amount > linkedAccount.balance && (
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
                 ⚠️ Account Shortage (Short by {formatCurrency(payment.amount - linkedAccount.balance)})
               </span>
             )}
 
             {/* Over Budget Category Warning Badge */}
-            {isCategoryOverBudget && (
+            {isCategoryOverBudget && !payment.isSkipped && (
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
                 ⚠️ Budget Cap Exceeded
               </span>
             )}
 
             {/* Urgency Badge */}
-            <span className={`text-[10px] px-2.5 py-0.5 rounded-full shrink-0 font-black ${urgency.colorClass}`}>
-              {urgency.label}
-            </span>
-
+            {!payment.isSkipped && (
+              <span className={`text-[10px] px-2.5 py-0.5 rounded-full shrink-0 font-black ${urgency.colorClass}`}>
+                {urgency.label}
+              </span>
+            )}
 
             {/* Linked Account Badge */}
             {linkedAccount && (
@@ -164,13 +173,13 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
         </div>
       </div>
 
-      {/* Right Amount, Paytm Pay & Checkbox */}
-      <div className="flex items-center space-x-3 shrink-0">
+      {/* Right Amount, Paytm Pay, Skip & Checkbox */}
+      <div className="flex items-center space-x-2.5 shrink-0">
         <div className="text-right">
           <span
             className={`font-black text-base tracking-tight block ${
-              payment.isPaid
-                ? 'text-slate-500 dark:text-slate-400'
+              payment.isPaid || payment.isSkipped
+                ? 'text-slate-400 dark:text-slate-500 line-through decoration-slate-400'
                 : 'text-slate-900 dark:text-white'
             }`}
           >
@@ -178,7 +187,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
           </span>
 
           {/* Paytm UPI Direct Pay Button */}
-          {!payment.isPaid && (
+          {!payment.isPaid && !payment.isSkipped && (
             <button
               type="button"
               onClick={handlePaytmPayClick}
@@ -191,6 +200,24 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
             </button>
           )}
         </div>
+
+        {/* Skip Month Action Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleSkip(payment.id);
+          }}
+          className={`px-2 py-1 rounded-xl text-[10px] font-black border transition-all shrink-0 active:scale-95 flex items-center space-x-1 ${
+            payment.isSkipped
+              ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+              : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-amber-500/10 hover:text-amber-600'
+          }`}
+          title={payment.isSkipped ? 'Resume this item for the month' : 'Skip this item for this month'}
+        >
+          <SkipForward className="w-3 h-3 stroke-[2.5]" />
+          <span>{payment.isSkipped ? 'Skipped' : 'Skip'}</span>
+        </button>
 
         {/* Paid Checkbox Button */}
         <button

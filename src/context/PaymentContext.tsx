@@ -33,6 +33,7 @@ interface PaymentContextType {
   summary: MonthSummary;
   allMonthSummaries: MonthSummary[];
   togglePaid: (id: string) => void;
+  toggleSkip: (id: string) => void;
   addPayment: (data: Omit<PaymentItem, 'id' | 'monthKey' | 'isPaid' | 'paidAt'>) => void;
   updatePayment: (id: string, data: Partial<PaymentItem>) => void;
   deletePayment: (id: string) => void;
@@ -434,6 +435,21 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
   };
 
+  // Toggle Skipped for this month (e.g. pause SIP or skip non-mandatory commitment)
+  const toggleSkip = (id: string) => {
+    setPayments(prevPayments =>
+      prevPayments.map(item => {
+        if (item.id === id) {
+          return {
+            ...item,
+            isSkipped: !item.isSkipped
+          };
+        }
+        return item;
+      })
+    );
+  };
+
   // Payment Methods CRUD
   const addPaymentMethod = (data: Omit<PaymentMethod, 'id'>) => {
     const newMethod: PaymentMethod = {
@@ -774,23 +790,24 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Current month summary metrics
   const summary: MonthSummary = useMemo(() => {
-    const totalAmount = currentMonthPayments.reduce((acc, p) => acc + p.amount, 0);
-    const paidAmount = currentMonthPayments
+    const activeItems = currentMonthPayments.filter(p => !p.isSkipped);
+    const totalAmount = activeItems.reduce((acc, p) => acc + p.amount, 0);
+    const paidAmount = activeItems
       .filter(p => p.isPaid)
       .reduce((acc, p) => acc + p.amount, 0);
     const pendingAmount = totalAmount - paidAmount;
     const percentagePaid = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
-    const paidCount = currentMonthPayments.filter(p => p.isPaid).length;
+    const paidCount = activeItems.filter(p => p.isPaid).length;
 
-    const totalSavings = currentMonthPayments
+    const totalSavings = activeItems
       .filter(p => p.commitmentType === 'savings' || CATEGORY_MAP[p.category]?.group === 'savings')
       .reduce((acc, p) => acc + p.amount, 0);
 
-    const totalExpense = currentMonthPayments
+    const totalExpense = activeItems
       .filter(p => p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
       .reduce((acc, p) => acc + p.amount, 0);
 
-    const mandatoryTotal = currentMonthPayments
+    const mandatoryTotal = activeItems
       .filter(p => p.isMandatory !== false)
       .reduce((acc, p) => acc + p.amount, 0);
 
@@ -898,6 +915,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         summary,
         allMonthSummaries,
         togglePaid,
+        toggleSkip,
         addPayment,
         updatePayment,
         deletePayment,
