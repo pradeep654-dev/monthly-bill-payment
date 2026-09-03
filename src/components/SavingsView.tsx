@@ -92,20 +92,17 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
             }`}>
               Total Monthly Savings
             </span>
-            <span className={`text-2xl font-black tracking-tight ${
+            <span className={`text-2xl font-black tracking-tight block ${
               isLiquidGlass
                 ? 'text-slate-900 dark:text-white'
                 : 'text-white'
             }`}>
               {formatCurrency(totalSavingsAmount)}
             </span>
-          </div>
-
-          <div className="text-right">
-            <span className={`block text-[11px] font-bold ${
+            <span className={`block text-[11px] font-bold mt-1 ${
               isLiquidGlass
                 ? 'text-slate-600 dark:text-slate-300'
-                : 'text-slate-300'
+                : 'text-emerald-200/80'
             }`}>
               {savingsItems.length} active investments
             </span>
