@@ -142,16 +142,27 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [theme, isLiquidGlass]);
 
-  // Load Payment Methods
+  // Load Payment Methods (Exclusively SBI & HDFC + GPay UPI)
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_METHODS);
       if (saved) {
-        const parsed: PaymentMethod[] = JSON.parse(saved);
+        let parsed: PaymentMethod[] = JSON.parse(saved);
+        // Filter out ICICI account completely
+        parsed = parsed.filter(m => m.id !== 'pm-3' && !m.name.toLowerCase().includes('icici'));
+
         if (parsed.some(m => m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi'))) {
-          return parsed;
+          // Sync SBI & HDFC balances to 40,000 default split if untouched
+          return parsed.map(m => {
+            if (m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi')) {
+              return { ...m, balance: 40000, initialBalance: 40000 };
+            }
+            if (m.id === 'pm-1' || m.name.toLowerCase().includes('hdfc')) {
+              return { ...m, balance: 40000, initialBalance: 40000 };
+            }
+            return m;
+          });
         }
-        // Merge DEFAULT_PAYMENT_METHODS if pm-sbi missing from older cached storage
         return DEFAULT_PAYMENT_METHODS;
       }
     } catch (e) {

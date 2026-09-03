@@ -27,14 +27,6 @@ export const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
     balance: 11500,
     initialBalance: 15000,
     color: 'emerald'
-  },
-  {
-    id: 'pm-3',
-    name: 'ICICI Savings',
-    type: 'bank',
-    balance: 50000,
-    initialBalance: 50000,
-    color: 'purple'
   }
 ];
 
@@ -94,7 +86,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     dueDay: 5,
     category: 'investment',
     commitmentType: 'savings',
-    paymentMethodId: 'pm-3',
+    paymentMethodId: 'pm-sbi',
     isRecurring: true,
     isAutopayEnabled: true,
     isMandatory: true,
@@ -107,7 +99,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     dueDay: 10,
     category: 'savings',
     commitmentType: 'savings',
-    paymentMethodId: 'pm-3',
+    paymentMethodId: 'pm-sbi',
     isRecurring: true,
     isAutopayEnabled: true,
     isMandatory: true,
@@ -184,7 +176,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     dueDay: 5,
     category: 'investment',
     commitmentType: 'savings',
-    paymentMethodId: 'pm-3',
+    paymentMethodId: 'pm-sbi',
     isRecurring: true,
     isAutopayEnabled: true,
     isPaid: false,
@@ -200,7 +192,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     dueDay: 10,
     category: 'savings',
     commitmentType: 'savings',
-    paymentMethodId: 'pm-3',
+    paymentMethodId: 'pm-sbi',
     isRecurring: true,
     isAutopayEnabled: true,
     isPaid: false,
