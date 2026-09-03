@@ -684,8 +684,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Function to execute Salary Credit to SBI & Auto-Split to HDFC
   const runSalaryCreditAndSplit = (incomeAmt: number = monthlyIncome, splitPct: number = salarySplitPercent) => {
-    const sbiShare = Math.round((incomeAmt * (100 - splitPct)) / 100);
     const hdfcShare = Math.round((incomeAmt * splitPct) / 100);
+    const sbiShare = incomeAmt - hdfcShare;
 
     setPaymentMethods(methods => {
       const hasSbi = methods.some(m => m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi'));
@@ -693,10 +693,10 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       return methods.map(m => {
         if (m.id === 'pm-sbi' || (hasSbi && m.name.toLowerCase().includes('sbi'))) {
-          return { ...m, balance: m.balance + sbiShare, initialBalance: m.initialBalance + sbiShare };
+          return { ...m, balance: sbiShare, initialBalance: sbiShare };
         }
         if (m.id === 'pm-1' || (hasHdfc && m.name.toLowerCase().includes('hdfc'))) {
-          return { ...m, balance: m.balance + hdfcShare, initialBalance: m.initialBalance + hdfcShare };
+          return { ...m, balance: hdfcShare, initialBalance: hdfcShare };
         }
         return m;
       });
@@ -714,6 +714,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateSalarySettings = (newIncome: number, newSplitPercent: number) => {
     setMonthlyIncome(newIncome);
     setSalarySplitPercent(newSplitPercent);
+    runSalaryCreditAndSplit(newIncome, newSplitPercent);
   };
 
   const fundMonth = (amount: number = monthlyIncome) => {
