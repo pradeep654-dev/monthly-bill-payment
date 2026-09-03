@@ -146,7 +146,14 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_METHODS);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: PaymentMethod[] = JSON.parse(saved);
+        if (parsed.some(m => m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi'))) {
+          return parsed;
+        }
+        // Merge DEFAULT_PAYMENT_METHODS if pm-sbi missing from older cached storage
+        return DEFAULT_PAYMENT_METHODS;
+      }
     } catch (e) {
       console.error('Failed to load payment methods from localStorage:', e);
     }

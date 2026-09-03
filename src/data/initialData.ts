@@ -16,8 +16,8 @@ export const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
     id: 'pm-1',
     name: 'HDFC Bank Account',
     type: 'bank',
-    balance: 60000,
-    initialBalance: 60000,
+    balance: 40000,
+    initialBalance: 40000,
     color: 'blue'
   },
   {
