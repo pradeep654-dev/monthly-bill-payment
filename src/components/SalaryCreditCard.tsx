@@ -39,32 +39,32 @@ export const SalaryCreditCard: React.FC = () => {
 
 
         {/* Salary & Leftover Allocation Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-2xl bg-white/60 dark:bg-[#0D1117]/80 border border-slate-200/60 dark:border-slate-800">
-            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 block whitespace-nowrap">
-              Payday Income (SBI)
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="p-3 rounded-2xl bg-white/60 dark:bg-[#0D1117]/80 border border-slate-200/60 dark:border-slate-800 min-w-0">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 block truncate tracking-tight">
+              Payday Income
             </span>
-            <span className="text-lg font-black text-slate-900 dark:text-white">
+            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block mt-0.5 truncate">
               {formatCurrency(summary.monthlyIncome || 80000)}
             </span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
-            <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 block whitespace-nowrap">
-              Leftover Disposable Cash
+          <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 min-w-0">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 block truncate tracking-tight" title="Free Disposable Cash">
+              Free Disposable Cash
             </span>
-            <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+            <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 block mt-0.5 truncate">
               {formatCurrency(summary.leftoverIncome || 51493)}
             </span>
           </div>
         </div>
 
         {/* Footer info */}
-        <div className="pt-1 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-          <span className="whitespace-nowrap">Reserves: {formatCurrency(summary.totalAmount)} for bills & SIPs</span>
-          <span className="font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap flex items-center space-x-1">
+        <div className="pt-1 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium gap-2">
+          <span className="truncate">Reserves: {formatCurrency(summary.totalAmount)} for bills & SIPs</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400 shrink-0 flex items-center space-x-1">
             <CheckCircle2 className="w-3.5 h-3.5 inline text-emerald-500" />
-            <span>Auto-Split Active</span>
+            <span>Auto-Split</span>
           </span>
         </div>
       </div>
