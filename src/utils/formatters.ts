@@ -123,17 +123,23 @@ export const getUrgencyStatus = (dueDay: number, monthKey: string, isPaid: boole
 };
 
 /**
- * Generates Paytm default UPI URL scheme (paytmmp:// or paytm://) with generic upi:// fallback
+ * Generates Paytm app deep link URL (paytmmp://)
+ * - If upiId is provided: redirects directly to payment page for that VPA on Paytm
+ * - If no upiId is provided: redirects to Paytm Pay / Home screen
  */
-export const generateUpiUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  const vpa = upiId ? upiId.trim() : 'payee@upi';
-  const nameEncoded = encodeURIComponent(payeeName);
-  // Default to Paytm deep link scheme
-  return `paytmmp://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
+  if (upiId && upiId.trim()) {
+    const vpa = upiId.trim();
+    const nameEncoded = encodeURIComponent(payeeName);
+    return `paytmmp://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  }
+  return `paytmmp://pay`;
 };
 
+export const generateUpiUrl = generatePaytmUrl;
+
 export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  const vpa = upiId ? upiId.trim() : 'payee@upi';
+  const vpa = upiId ? upiId.trim() : '';
   const nameEncoded = encodeURIComponent(payeeName);
-  return `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  return vpa ? `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR` : `upi://pay`;
 };

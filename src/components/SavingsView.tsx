@@ -39,10 +39,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Top Banner Card */}
-      <div className={`app-card p-5 overflow-hidden relative ${
+      <div className={`app-card p-5 overflow-hidden relative transition-all ${
         isLiquidGlass
-          ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-400/40 backdrop-blur-md'
-          : 'bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white border-emerald-800'
+          ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-400/40 backdrop-blur-md text-slate-900 dark:text-white'
+          : 'bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 text-white border-emerald-700/60 shadow-lg'
       }`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
@@ -50,10 +50,18 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               <PiggyBank className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 block">
+              <span className={`text-[10px] font-black uppercase tracking-wider block ${
+                isLiquidGlass
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-emerald-300'
+              }`}>
                 Wealth & Deposits
               </span>
-              <h2 className="text-base font-black tracking-tight text-white">
+              <h2 className={`text-base font-black tracking-tight ${
+                isLiquidGlass
+                  ? 'text-slate-900 dark:text-white'
+                  : 'text-white'
+              }`}>
                 {summary.monthName} Savings
               </h2>
             </div>
@@ -69,22 +77,42 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
         </div>
 
         {/* Primary Metric: Total Monthly Savings */}
-        <div className="mt-3 p-4 rounded-2xl bg-white/10 dark:bg-white/5 border border-white/15 backdrop-blur-md flex items-center justify-between">
+        <div className={`mt-3 p-4 rounded-2xl border backdrop-blur-md flex items-center justify-between ${
+          isLiquidGlass
+            ? 'bg-white/60 dark:bg-white/5 border-emerald-200 dark:border-white/15'
+            : 'bg-white/10 border-white/15'
+        }`}>
           <div>
-            <span className="text-[11px] font-black text-emerald-300 uppercase tracking-wider block mb-0.5">
+            <span className={`text-[11px] font-black uppercase tracking-wider block mb-0.5 ${
+              isLiquidGlass
+                ? 'text-emerald-800 dark:text-emerald-300'
+                : 'text-emerald-200'
+            }`}>
               Total Monthly Savings
             </span>
-            <span className="text-2xl font-black text-white tracking-tight">
+            <span className={`text-2xl font-black tracking-tight ${
+              isLiquidGlass
+                ? 'text-slate-900 dark:text-white'
+                : 'text-white'
+            }`}>
               {formatCurrency(totalSavingsAmount)}
             </span>
           </div>
 
           <div className="text-right space-y-1">
-            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-400/30">
+            <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+              isLiquidGlass
+                ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-400/30'
+                : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+            }`}>
               <Repeat className="w-3 h-3" />
               <span>AUTO EVERY MONTH</span>
             </span>
-            <span className="block text-[11px] font-bold text-slate-300">
+            <span className={`block text-[11px] font-bold ${
+              isLiquidGlass
+                ? 'text-slate-600 dark:text-slate-300'
+                : 'text-slate-300'
+            }`}>
               {savingsItems.length} active investments
             </span>
           </div>
@@ -92,12 +120,20 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
         {/* Paid vs Pending Breakdown */}
         <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-          <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-between text-emerald-200">
+          <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+            isLiquidGlass
+              ? 'bg-emerald-100/80 dark:bg-emerald-500/20 border-emerald-300/80 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
+              : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-200'
+          }`}>
             <span className="font-extrabold text-[11px]">Deposited (Paid)</span>
             <span className="font-black">{formatCurrency(paidSavingsAmount)}</span>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-between text-amber-200">
+          <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+            isLiquidGlass
+              ? 'bg-amber-100/80 dark:bg-amber-500/20 border-amber-300/80 dark:border-amber-500/30 text-amber-900 dark:text-amber-200'
+              : 'bg-amber-500/20 border-amber-500/30 text-amber-200'
+          }`}>
             <span className="font-extrabold text-[11px]">Pending Deposit</span>
             <span className="font-black">{formatCurrency(pendingSavingsAmount)}</span>
           </div>

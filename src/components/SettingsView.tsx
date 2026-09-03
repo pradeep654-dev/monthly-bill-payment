@@ -25,6 +25,7 @@ import {
 import { usePayments } from '../context/PaymentContext';
 import { SalarySettingsModal } from './SalarySettingsModal';
 import { formatCurrency } from '../utils/formatters';
+import { forceReloadApp } from './PWAUpdatePrompt';
 
 interface SettingsViewProps {
   onOpenBudgetModal?: () => void;
@@ -130,27 +131,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenBudgetModal })
   };
 
   const handleForceRefresh = async () => {
-    if ('serviceWorker' in navigator) {
-      try {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (let registration of registrations) {
-          await registration.unregister();
-        }
-      } catch (e) {
-        console.error('Error unregistering service workers:', e);
-      }
-    }
-    if ('caches' in window) {
-      try {
-        const cacheNames = await caches.keys();
-        for (let name of cacheNames) {
-          await caches.delete(name);
-        }
-      } catch (e) {
-        console.error('Error clearing caches:', e);
-      }
-    }
-    window.location.reload();
+    setImportMessage({ text: 'Clearing PWA cache and fetching latest version...', success: true });
+    await forceReloadApp();
   };
 
   const handleEnableSync = async (e: React.FormEvent) => {

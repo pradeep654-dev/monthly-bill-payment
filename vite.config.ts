@@ -10,12 +10,22 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon-32x32.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'robots.txt'],
       workbox: {
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true
+        skipWaiting: false,
+        clientsClaim: true,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-pages-cache',
+              networkTimeoutSeconds: 3
+            }
+          }
+        ]
       },
       manifest: {
         name: 'Monthly Payment Tracker',

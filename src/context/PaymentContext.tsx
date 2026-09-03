@@ -21,6 +21,7 @@ import {
 import { getMonthName, getNextMonthKey, getPrevMonthKey } from '../utils/formatters';
 import { pushToCloudSync, fetchLatestCloudSync, subscribeToCloudEvents } from '../utils/cloudSync';
 import { CATEGORY_MAP } from '../utils/categories';
+import { saveToPersistentStorage, loadFromPersistentStorage } from '../utils/dbStorage';
 
 interface PaymentContextType {
   currentMonthKey: string;
@@ -152,20 +153,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         let parsed: PaymentMethod[] = JSON.parse(saved);
         // Filter out ICICI account completely
         parsed = parsed.filter(m => m.id !== 'pm-3' && !m.name.toLowerCase().includes('icici'));
-
-        if (parsed.some(m => m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi'))) {
-          // Sync SBI & HDFC balances to 40,000 default split if untouched
-          return parsed.map(m => {
-            if (m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi')) {
-              return { ...m, balance: 40000, initialBalance: 40000 };
-            }
-            if (m.id === 'pm-1' || m.name.toLowerCase().includes('hdfc')) {
-              return { ...m, balance: 40000, initialBalance: 40000 };
-            }
-            return m;
-          });
-        }
-        return DEFAULT_PAYMENT_METHODS;
+        if (parsed.length > 0) return parsed;
       }
     } catch (e) {
       console.error('Failed to load payment methods from localStorage:', e);
@@ -186,11 +174,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return DEFAULT_CATEGORY_BUDGETS;
   });
 
-  // Save Category Budgets
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_BUDGETS, JSON.stringify(categoryBudgets));
-  }, [categoryBudgets]);
-
   const updateCategoryBudget = (category: CategoryType, amount: number) => {
     setCategoryBudgets(prev => ({
       ...prev,
@@ -205,13 +188,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const resetCategoryBudgets = () => {
     setCategoryBudgets(DEFAULT_CATEGORY_BUDGETS);
     localStorage.removeItem(STORAGE_KEY_BUDGETS);
+    saveToPersistentStorage(STORAGE_KEY_BUDGETS, DEFAULT_CATEGORY_BUDGETS);
   };
-
-
-  // Save Payment Methods
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_METHODS, JSON.stringify(paymentMethods));
-  }, [paymentMethods]);
 
   // Load Templates
   const [templates, setTemplates] = useState<PaymentTemplate[]>(() => {
@@ -244,17 +222,55 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return INITIAL_PAYMENTS_SEPT_2026;
   });
 
-  // Save payments and templates to localStorage and Cloud Sync
+  // Backup restoration on mount if localStorage was cleared during PWA app updates
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PAYMENTS, JSON.stringify(payments));
+    const restorePermanentBackup = async () => {
+      try {
+        const backupPayments = await loadFromPersistentStorage<PaymentItem[] | null>(STORAGE_KEY_PAYMENTS, null);
+        if (backupPayments && backupPayments.length > 0) {
+          setPayments(prev => (prev === INITIAL_PAYMENTS_SEPT_2026 ? backupPayments : prev));
+        }
+
+        const backupMethods = await loadFromPersistentStorage<PaymentMethod[] | null>(STORAGE_KEY_METHODS, null);
+        if (backupMethods && backupMethods.length > 0) {
+          setPaymentMethods(prev => (prev === DEFAULT_PAYMENT_METHODS ? backupMethods : prev));
+        }
+
+        const backupTemplates = await loadFromPersistentStorage<PaymentTemplate[] | null>(STORAGE_KEY_TEMPLATES, null);
+        if (backupTemplates && backupTemplates.length > 0) {
+          setTemplates(prev => (prev === DEFAULT_TEMPLATES ? backupTemplates : prev));
+        }
+
+        const backupBudgets = await loadFromPersistentStorage<CategoryBudgets | null>(STORAGE_KEY_BUDGETS, null);
+        if (backupBudgets) {
+          setCategoryBudgets(prev => ({ ...prev, ...backupBudgets }));
+        }
+      } catch (err) {
+        console.warn('[PaymentContext] Backup restore error:', err);
+      }
+    };
+    restorePermanentBackup();
+  }, []);
+
+  // Save payments and templates to localStorage, IndexedDB, and Cloud Sync
+  useEffect(() => {
+    saveToPersistentStorage(STORAGE_KEY_PAYMENTS, payments);
     if (isCloudSyncActive && cloudSyncCode && !isRemoteUpdatingRef.current) {
       pushToCloudSync(cloudSyncCode, { payments, templates });
     }
   }, [payments, isCloudSyncActive, cloudSyncCode, templates]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(templates));
+    saveToPersistentStorage(STORAGE_KEY_TEMPLATES, templates);
   }, [templates]);
+
+  useEffect(() => {
+    saveToPersistentStorage(STORAGE_KEY_METHODS, paymentMethods);
+  }, [paymentMethods]);
+
+  useEffect(() => {
+    saveToPersistentStorage(STORAGE_KEY_BUDGETS, categoryBudgets);
+  }, [categoryBudgets]);
 
   // Real-time Cloud Sync Event Listener
   useEffect(() => {

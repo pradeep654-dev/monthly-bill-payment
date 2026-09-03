@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, RefreshCw } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { MonthPickerModal } from './MonthPickerModal';
+import { forceReloadApp } from './PWAUpdatePrompt';
 import logoHorizontal from '../assets/logo-horizontal.png';
 import logoLightHorizontal from '../assets/logo-light-horizontal.png';
 import logoLiquidDarkHorizontal from '../assets/logo-liquid-dark-horizontal.png';
@@ -54,12 +55,13 @@ export const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Month Selector Pill */}
-          <div className={`flex items-center space-x-0.5 p-1 rounded-2xl shadow-2xs backdrop-blur-xl ${
-            isLiquidGlass
-              ? 'real-liquid-pill dark:border-white/20'
-              : 'bg-slate-100 dark:bg-[#0D1322] border border-slate-200 dark:border-slate-750'
-          }`}>
+          {/* Right Header Action Group: Month Selector Pill + Force Refresh */}
+          <div className="flex items-center space-x-1.5">
+            <div className={`flex items-center space-x-0.5 p-1 rounded-2xl shadow-2xs backdrop-blur-xl ${
+              isLiquidGlass
+                ? 'real-liquid-pill dark:border-white/20'
+                : 'bg-slate-100 dark:bg-[#0D1322] border border-slate-200 dark:border-slate-750'
+            }`}>
               <button
                 onClick={goToPrevMonth}
                 className="p-1 rounded-xl text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white active:scale-95 transition-all"
@@ -91,6 +93,21 @@ export const Header: React.FC = () => {
                 <Calendar className="w-3.5 h-3.5 stroke-[2.2]" />
               </button>
             </div>
+
+            {/* Quick Force Refresh App Button for Mobile PWA */}
+            <button
+              onClick={forceReloadApp}
+              className={`p-2 rounded-2xl transition-all duration-300 active:rotate-180 hover:scale-105 active:scale-95 ${
+                isLiquidGlass
+                  ? 'bg-white/40 dark:bg-white/10 text-slate-700 dark:text-slate-200 border border-white/40'
+                  : 'bg-slate-100 dark:bg-[#0D1322] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-750'
+              }`}
+              title="Force Refresh & Update App Version"
+              aria-label="Force Refresh & Update App Version"
+            >
+              <RefreshCw className="w-3.5 h-3.5 stroke-[2.5]" />
+            </button>
+          </div>
           </div>
         </header>
 

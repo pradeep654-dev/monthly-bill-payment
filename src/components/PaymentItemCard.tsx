@@ -1,9 +1,9 @@
 import React from 'react';
-import { Check, ArrowUpRight, Smartphone, Calendar, SkipForward } from 'lucide-react';
+import { Check, Calendar, SkipForward, Sparkles } from 'lucide-react';
 import type { PaymentItem } from '../types';
 import { usePayments } from '../context/PaymentContext';
 import { getCategoryMeta } from '../utils/categories';
-import { formatCurrency, getUrgencyStatus, generateUpiUrl, generateGenericUpiUrl, formatDueDay } from '../utils/formatters';
+import { formatCurrency, getUrgencyStatus, generateUpiUrl, formatDueDay } from '../utils/formatters';
 
 interface PaymentItemCardProps {
   payment: PaymentItem;
@@ -15,7 +15,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   payment,
   onEdit
 }) => {
-  const { togglePaid, toggleSkip, paymentMethods, currentMonthKey, isLiquidGlass, categoryBudgetSummaries } = usePayments();
+  const { togglePaid, toggleSkip, paymentMethods, currentMonthKey, categoryBudgetSummaries } = usePayments();
   const categoryMeta = getCategoryMeta(payment.category);
   const IconComponent = categoryMeta.icon;
 
@@ -33,207 +33,181 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   const handlePaytmPayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const paytmUrl = generateUpiUrl(payment.name, payment.amount, payment.upiId);
-    const genericUpiUrl = generateGenericUpiUrl(payment.name, payment.amount, payment.upiId);
-    
-    const start = Date.now();
     window.location.href = paytmUrl;
-
-    // Graceful fallback to generic UPI handler if Paytm deep link is not handled
-    setTimeout(() => {
-      if (Date.now() - start < 1500) {
-        window.location.href = genericUpiUrl;
-      }
-    }, 1200);
   };
 
   return (
     <div
       onClick={() => onEdit(payment)}
-      className={`group relative app-card rounded-[22px] p-4 flex items-center justify-between transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+      className={`group relative app-card rounded-[26px] p-4.5 flex flex-col justify-between space-y-3.5 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
         urgency.status === 'overdue'
           ? '!border-rose-400/60 !bg-rose-500/15 dark:!bg-rose-950/40'
           : ''
       } ${payment.isPaid ? 'opacity-85' : ''}`}
     >
-      {/* Left Icon & Details */}
-      <div className="flex items-start space-x-3.5 min-w-0 pr-2 flex-1">
-        {/* Category Icon */}
-        <div
-          className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors mt-0.5 ${categoryMeta.colorClasses}`}
-        >
-          <IconComponent className="w-5 h-5 stroke-[2.2]" />
-        </div>
+      {/* Top Header Row: Left (Icon & Title) vs Right (Amount & Paid Status Badge) */}
+      <div className="flex items-center justify-between">
+        {/* Left: Icon & Commitment Name */}
+        <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
+          {/* Category Icon */}
+          <div
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${categoryMeta.colorClasses}`}
+          >
+            <IconComponent className="w-6 h-6 stroke-[2.2]" />
+          </div>
 
-        {/* Text Details Stack */}
-        <div className="min-w-0 space-y-1 flex-1">
-          {/* Row 1: Full Commitment Name */}
+          {/* Commitment Title */}
           <h4
-            className={`font-black text-base tracking-tight leading-snug break-words ${
+            className={`font-black text-xl tracking-tight leading-snug break-words ${
               payment.isPaid
-                ? 'text-slate-500 dark:text-slate-400 line-through decoration-slate-400'
+                ? 'text-slate-400 dark:text-slate-400 line-through decoration-slate-400'
                 : 'text-slate-900 dark:text-white'
             }`}
           >
             {payment.name}
           </h4>
+        </div>
 
-          {/* Row 2: Below Full Name - Due Date, Category, Urgency & Payment Details */}
-          <div className="flex items-center space-x-2 gap-y-1.5 flex-wrap text-xs pt-0.5">
-            {/* Due Date Indicator */}
-            <span className="inline-flex items-center space-x-1 text-[11px] font-black text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-lg border border-slate-200/80 dark:border-slate-700/60 shrink-0">
-              <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-orange-400 shrink-0 stroke-[2.5]" />
-              <span>{formatDueDay(payment.dueDay)}</span>
+        {/* Top Right: Amount & Paid Status Badge + Paytm Button Below */}
+        <div className="flex flex-col items-end space-y-1.5 shrink-0">
+          <div className="flex items-center space-x-2">
+            <span
+              className={`font-black text-xl tracking-tight ${
+                payment.isPaid || payment.isSkipped
+                  ? 'text-slate-400 dark:text-slate-500 line-through decoration-slate-400'
+                  : 'text-slate-900 dark:text-white'
+              }`}
+            >
+              {formatCurrency(payment.amount)}
             </span>
 
-            {/* Category Badge */}
-            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${categoryMeta.colorClasses}`}>
+            {/* Paid Status Pill Badge */}
+            {payment.isSkipped ? (
+              <span className="text-xs font-black px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                Skipped
+              </span>
+            ) : payment.isPaid ? (
+              <span className="text-xs font-black px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0">
+                Paid
+              </span>
+            ) : (
+              <span className="text-xs font-black px-3 py-1 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 shrink-0">
+                Unpaid
+              </span>
+            )}
+          </div>
+
+          {/* Paytm Brand Button with plain text 'Pay via' before the Paytm box */}
+          {!payment.isPaid && !payment.isSkipped && (
+            <div className="flex items-center space-x-1.5 pt-0.5">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Pay via
+              </span>
+              <button
+                type="button"
+                onClick={handlePaytmPayClick}
+                className="px-3 py-1 rounded-full text-xs font-black bg-[#002970] hover:bg-[#001e4d] text-white border border-[#00BAF2]/60 shadow-md transition-all shrink-0 active:scale-95 flex items-center justify-center"
+                title="Pay directly via Paytm App"
+              >
+                <span className="tracking-tight flex items-center">
+                  <span className="text-white font-extrabold">Pay</span>
+                  <span className="text-[#00BAF2] font-black">tm</span>
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Middle Row: Badges on Left vs Action Buttons (Skip & Checkbox) on Right */}
+      <div className="flex items-center justify-between">
+        {/* Left Column: Stacked Badges */}
+        <div className="flex flex-col space-y-1.5 min-w-0 pr-2">
+          {/* Row 1: Due Date Badge */}
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+            <span className="inline-flex items-center space-x-1.5 text-xs font-black text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-[#1a2333] px-3 py-1 rounded-xl border border-slate-200 dark:border-[#2a364f] shrink-0">
+              <Calendar className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 shrink-0 stroke-[2.5]" />
+              <span>{formatDueDay(payment.dueDay)}</span>
+            </span>
+          </div>
+
+          {/* Row 2: Category & Metadata Badges */}
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+            {/* Category Pill */}
+            <span className={`text-xs font-black px-3 py-1 rounded-xl shrink-0 ${categoryMeta.colorClasses}`}>
               {categoryMeta.label}
             </span>
 
-            {/* Recurrence & Type Badge */}
-            {payment.commitmentType === 'savings' || categoryMeta.group === 'savings' ? (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700/60">
-                🏦 Savings • Auto Every Month
-              </span>
-            ) : payment.isRecurring ? (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-                🔁 Every Month
-              </span>
-            ) : (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                📌 Current Month Only
-              </span>
-            )}
-
             {/* Autopay Badge */}
             {payment.isAutopayEnabled && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 flex items-center space-x-1">
+              <span className="text-xs font-black px-3 py-1 rounded-xl shrink-0 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 flex items-center space-x-1">
                 <span>⚡ Autopay @ 11:55 PM</span>
               </span>
             )}
 
-            {/* Skipped Badge */}
-            {payment.isSkipped && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-amber-500 text-white border border-amber-600 shadow-xs flex items-center space-x-1">
-                <SkipForward className="w-3 h-3" />
-                <span>Skipped for Month</span>
-              </span>
-            )}
-
-            {/* Mandatory / Discretionary Tag Badge */}
-            {payment.isMandatory !== false ? (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
-                🔒 Mandatory
-              </span>
-            ) : (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
-                🎨 Discretionary
-              </span>
-            )}
-
-            {/* Insufficient Account Balance Overdraft Warning */}
+            {/* Warnings */}
             {!payment.isPaid && !payment.isSkipped && linkedAccount && payment.amount > linkedAccount.balance && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+              <span className="text-xs font-black px-3 py-1 rounded-xl shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
                 ⚠️ Account Shortage (Short by {formatCurrency(payment.amount - linkedAccount.balance)})
               </span>
             )}
 
-            {/* Over Budget Category Warning Badge */}
             {isCategoryOverBudget && !payment.isSkipped && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+              <span className="text-xs font-black px-3 py-1 rounded-xl shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
                 ⚠️ Budget Cap Exceeded
-              </span>
-            )}
-
-            {/* Urgency Badge */}
-            {!payment.isSkipped && (
-              <span className={`text-[10px] px-2.5 py-0.5 rounded-full shrink-0 font-black ${urgency.colorClass}`}>
-                {urgency.label}
-              </span>
-            )}
-
-            {/* Linked Account Badge */}
-            {linkedAccount && (
-              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shrink-0 ${
-                isLiquidGlass
-                  ? 'bg-slate-900/10 dark:bg-white/15 text-slate-800 dark:text-slate-100 border-slate-300/50 dark:border-white/20 shadow-2xs backdrop-blur-md'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700'
-              }`}>
-                {linkedAccount.name}
-              </span>
-            )}
-
-            {/* Notes */}
-            {payment.notes && (
-              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[160px]">
-                • {payment.notes}
               </span>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Right Amount, Paytm Pay, Skip & Checkbox */}
-      <div className="flex items-center space-x-2.5 shrink-0">
-        <div className="text-right">
-          <span
-            className={`font-black text-base tracking-tight block ${
-              payment.isPaid || payment.isSkipped
-                ? 'text-slate-400 dark:text-slate-500 line-through decoration-slate-400'
-                : 'text-slate-900 dark:text-white'
+        {/* Right Column: Skip Button & Circular Paid Checkbox */}
+        <div className="flex items-center space-x-2.5 shrink-0 pl-2">
+
+          {/* Skip Button (▷ Skip) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSkip(payment.id);
+            }}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-black border transition-all shrink-0 active:scale-95 flex items-center space-x-1 ${
+              payment.isSkipped
+                ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                : 'bg-slate-100 dark:bg-[#1a2333] text-slate-700 dark:text-white border-slate-200 dark:border-[#2a364f] hover:bg-amber-500/10 hover:text-amber-600'
+            }`}
+            title={payment.isSkipped ? 'Resume this item for the month' : 'Skip this item for this month'}
+          >
+            <SkipForward className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>{payment.isSkipped ? 'Skipped' : 'Skip'}</span>
+          </button>
+
+          {/* Paid Checkbox Button: Solid White Circle with Check Icon */}
+          <button
+            type="button"
+            onClick={handleCheckboxClick}
+            aria-label={`Mark ${payment.name} as ${payment.isPaid ? 'unpaid' : 'paid'}`}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none shrink-0 ${
+              payment.isPaid
+                ? 'bg-white text-black shadow-md scale-105 active:scale-95'
+                : 'bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-400 hover:border-emerald-500 dark:hover:border-orange-500'
             }`}
           >
-            {formatCurrency(payment.amount)}
-          </span>
-
-          {/* Paytm UPI Direct Pay Button */}
-          {!payment.isPaid && !payment.isSkipped && (
-            <button
-              type="button"
-              onClick={handlePaytmPayClick}
-              className="mt-0.5 inline-flex items-center space-x-1 text-[10px] font-black text-sky-600 dark:text-sky-400 hover:underline active:scale-95 transition-all"
-              title="Pay directly via Paytm UPI App"
-            >
-              <Smartphone className="w-3 h-3 stroke-[2.5]" />
-              <span>Paytm UPI</span>
-              <ArrowUpRight className="w-3 h-3 stroke-[2.5]" />
-            </button>
-          )}
+            <Check className="w-5 h-5 stroke-[3]" />
+          </button>
         </div>
+      </div>
 
-        {/* Skip Month Action Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleSkip(payment.id);
-          }}
-          className={`px-2 py-1 rounded-xl text-[10px] font-black border transition-all shrink-0 active:scale-95 flex items-center space-x-1 ${
-            payment.isSkipped
-              ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
-              : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-amber-500/10 hover:text-amber-600'
-          }`}
-          title={payment.isSkipped ? 'Resume this item for the month' : 'Skip this item for this month'}
-        >
-          <SkipForward className="w-3 h-3 stroke-[2.5]" />
-          <span>{payment.isSkipped ? 'Skipped' : 'Skip'}</span>
-        </button>
+      {/* Bottom Footer Row: Notes on Left & Sparkle Icon on Bottom Right */}
+      <div className="flex items-center justify-between pt-1">
+        {payment.notes ? (
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate max-w-[280px]">
+            • {payment.notes}
+          </span>
+        ) : (
+          <div />
+        )}
 
-        {/* Paid Checkbox Button */}
-        <button
-          type="button"
-          onClick={handleCheckboxClick}
-          aria-label={`Mark ${payment.name} as ${payment.isPaid ? 'unpaid' : 'paid'}`}
-          className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 focus:outline-none ${
-            payment.isPaid
-              ? isLiquidGlass
-                ? 'bg-white text-slate-950 border border-white animate-check scale-105 shadow-md font-black'
-                : 'bg-emerald-500 dark:bg-orange-500 text-white shadow-md shadow-emerald-500/20 dark:shadow-orange-500/20 animate-check'
-              : 'bg-slate-100 dark:bg-[#0D1322] border-2 border-slate-300 dark:border-slate-650 hover:border-emerald-500 dark:hover:border-orange-500'
-          }`}
-        >
-          {payment.isPaid && <Check className="w-4 h-4 stroke-[3.5]" />}
-        </button>
+        <Sparkles className="w-4 h-4 text-slate-400 dark:text-slate-500 opacity-60 shrink-0" />
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ import { NavBar } from './components/NavBar';
 import { PaymentModal } from './components/PaymentModal';
 import { BudgetModal } from './components/BudgetModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
+import { PWAUpdatePrompt } from './components/PWAUpdatePrompt';
 import type { PaymentItem } from './types';
 
 const MainContent: React.FC = () => {
@@ -44,6 +45,9 @@ const MainContent: React.FC = () => {
     <div className={`h-screen h-[100dvh] w-full text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-emerald-500/20 dark:selection:bg-orange-500/20 overflow-hidden ${
       isLiquidGlass ? 'app-bg-light dark:app-bg-dark' : 'bg-slate-100 dark:bg-[#000000]'
     }`}>
+      {/* PWA Update Banner */}
+      <PWAUpdatePrompt />
+
       {/* Mobile Shell Container */}
       <div className={`w-full max-w-md mx-auto h-full flex flex-col relative z-10 shadow-2xl overflow-hidden border-x ${
         isLiquidGlass 
