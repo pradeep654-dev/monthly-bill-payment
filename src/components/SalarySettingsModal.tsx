@@ -99,12 +99,12 @@ export const SalarySettingsModal: React.FC<SalarySettingsModalProps> = ({ isOpen
 
           {/* Auto-Split Ratio Controls */}
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex justify-between items-center text-xs font-extrabold">
-              <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1">
+            <div className="flex justify-between items-center text-xs font-extrabold gap-1.5 whitespace-nowrap overflow-hidden">
+              <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1 shrink-0">
                 <ArrowRightLeft className="w-3.5 h-3.5 text-blue-500 inline mr-1" />
-                Bank Auto-Split Ratio
+                <span>Bank Auto-Split Ratio</span>
               </span>
-              <span className="text-blue-600 dark:text-blue-400 font-black">
+              <span className="text-blue-600 dark:text-blue-400 font-black shrink-0 whitespace-nowrap">
                 {100 - splitRatio}% SBI / {splitRatio}% HDFC
               </span>
             </div>

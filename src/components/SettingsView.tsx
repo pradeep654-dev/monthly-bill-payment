@@ -280,12 +280,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenBudgetModal })
           </button>
         </div>
 
-        <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-between text-xs font-semibold">
-          <div className="flex items-center space-x-2">
-            <ArrowRightLeft className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
-            <span>SBI: {formatCurrency(summary.sbiSplitAmount || 40000)} • HDFC: {formatCurrency(summary.hdfcSplitAmount || 40000)}</span>
+        <div className="p-2.5 sm:p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-between gap-1.5 text-[11px] sm:text-xs font-semibold whitespace-nowrap overflow-hidden">
+          <div className="flex items-center space-x-1.5 min-w-0 truncate">
+            <ArrowRightLeft className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+            <span className="truncate">SBI: {formatCurrency(summary.sbiSplitAmount || 40000)} • HDFC: {formatCurrency(summary.hdfcSplitAmount || 40000)}</span>
           </div>
-          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 font-black">
+          <span className="font-mono text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 font-black shrink-0 whitespace-nowrap">
             {100 - (salarySplitPercent || 50)}/{salarySplitPercent || 50} Split
           </span>
         </div>
