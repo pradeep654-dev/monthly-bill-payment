@@ -1,19 +1,28 @@
 import React, { useState } from 'react';
+import { Sparkles, IndianRupee } from 'lucide-react';
 import { PaymentProvider, usePayments } from './context/PaymentContext';
 import { Header } from './components/Header';
 import { OverviewCard } from './components/OverviewCard';
 import { PaymentAccountsBar } from './components/PaymentAccountsBar';
+
 import { CommitmentLoadCard } from './components/CommitmentLoadCard';
-import { PaymentList } from './components/PaymentList';
+import { DashboardChartCard } from './components/DashboardChartCard';
+import { CommitmentsView } from './components/CommitmentsView';
+import { SavingsView } from './components/SavingsView';
+import { BudgetHealthView } from './components/BudgetHealthView';
 import { HistoryView } from './components/HistoryView';
 import { SettingsView } from './components/SettingsView';
 import { NavBar } from './components/NavBar';
 import { PaymentModal } from './components/PaymentModal';
+import { BudgetModal } from './components/BudgetModal';
+import { AiAssistantModal } from './components/AiAssistantModal';
 import type { PaymentItem } from './types';
 
 const MainContent: React.FC = () => {
   const { activeTab, deletePayment, isLiquidGlass } = usePayments();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentItem | null>(null);
 
   const handleAddPayment = () => {
@@ -49,25 +58,60 @@ const MainContent: React.FC = () => {
           {activeTab === 'home' && (
             <>
               <OverviewCard />
-              <CommitmentLoadCard />
               <PaymentAccountsBar />
-              <PaymentList
-                onAddPayment={handleAddPayment}
-                onEditPayment={handleEditPayment}
-                onDeletePayment={handleDeletePayment}
-              />
+              <DashboardChartCard />
+              <CommitmentLoadCard />
             </>
+          )}
+
+          {activeTab === 'commitments' && (
+            <CommitmentsView
+              onAddCommitment={handleAddPayment}
+              onEditPayment={handleEditPayment}
+              onDeletePayment={handleDeletePayment}
+            />
+          )}
+
+          {activeTab === 'savings' && (
+            <SavingsView
+              onAddSavings={handleAddPayment}
+              onEditPayment={handleEditPayment}
+              onDeletePayment={handleDeletePayment}
+            />
+          )}
+
+          {activeTab === 'budget' && (
+            <BudgetHealthView onOpenBudgetModal={() => setIsBudgetModalOpen(true)} />
           )}
 
           {activeTab === 'history' && <HistoryView />}
 
-          {activeTab === 'settings' && <SettingsView />}
+          {activeTab === 'settings' && <SettingsView onOpenBudgetModal={() => setIsBudgetModalOpen(true)} />}
         </main>
+
+        {/* Dynamic Theme-Adaptive Floating Round Payri AI Button */}
+        <div className="absolute bottom-26 mb-1 right-4 z-40">
+          <button
+            onClick={() => setIsAiModalOpen(true)}
+            className={`w-13 h-13 rounded-full flex flex-col items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 group ${
+              isLiquidGlass
+                ? 'bg-white/40 dark:bg-white/20 backdrop-blur-xl border-2 border-white/70 dark:border-white/30 text-slate-900 dark:text-white shadow-[0_8px_25px_rgba(0,0,0,0.3)]'
+                : 'bg-gradient-to-tr from-emerald-500 via-teal-400 to-amber-400 dark:from-orange-500 dark:via-amber-400 dark:to-yellow-400 text-white shadow-xl shadow-emerald-500/30 dark:shadow-orange-500/40 border-2 border-white/80 dark:border-slate-800'
+            }`}
+            title="Open Payri AI Assistant"
+          >
+            <div className="relative flex items-center justify-center">
+              <IndianRupee className="w-5 h-5 stroke-[2.8] group-hover:scale-110 transition-transform" />
+              <Sparkles className="w-2.5 h-2.5 text-amber-300 dark:text-yellow-300 absolute -top-1 -right-1 animate-pulse" />
+            </div>
+            <span className="text-[9px] font-black leading-none tracking-tight mt-0.5">Payri</span>
+          </button>
+        </div>
 
         {/* Sticky Bottom Nav Bar */}
         <NavBar />
 
-        {/* Modal for Add / Edit */}
+        {/* Modal for Add / Edit Payment */}
         <PaymentModal
           isOpen={isModalOpen}
           onClose={() => {
@@ -76,10 +120,23 @@ const MainContent: React.FC = () => {
           }}
           editingPayment={editingPayment}
         />
+
+        {/* Modal for Category Budget Caps */}
+        <BudgetModal
+          isOpen={isBudgetModalOpen}
+          onClose={() => setIsBudgetModalOpen(false)}
+        />
+
+        {/* AI Finance Assistant Modal */}
+        <AiAssistantModal
+          isOpen={isAiModalOpen}
+          onClose={() => setIsAiModalOpen(false)}
+        />
       </div>
     </div>
   );
 };
+
 
 export default function App() {
   return (

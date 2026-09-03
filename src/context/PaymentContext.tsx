@@ -1,6 +1,23 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
-import type { PaymentItem, PaymentTemplate, PaymentMethod, MonthSummary, ThemeMode, ActiveTab } from '../types';
-import { INITIAL_MONTH, DEFAULT_TEMPLATES, INITIAL_PAYMENTS_SEPT_2026, DEFAULT_PAYMENT_METHODS } from '../data/initialData';
+import type { 
+  PaymentItem, 
+  PaymentTemplate, 
+  PaymentMethod, 
+  MonthSummary, 
+  ThemeMode, 
+  ActiveTab,
+  CategoryType,
+  CategoryBudgets,
+  CategoryBudgetSummary,
+  CategoryBudgetStatus
+} from '../types';
+import { 
+  INITIAL_MONTH, 
+  DEFAULT_TEMPLATES, 
+  INITIAL_PAYMENTS_SEPT_2026, 
+  DEFAULT_PAYMENT_METHODS,
+  DEFAULT_CATEGORY_BUDGETS
+} from '../data/initialData';
 import { getMonthName, getNextMonthKey, getPrevMonthKey } from '../utils/formatters';
 import { pushToCloudSync, fetchLatestCloudSync, subscribeToCloudEvents } from '../utils/cloudSync';
 import { CATEGORY_MAP } from '../utils/categories';
@@ -24,6 +41,16 @@ interface PaymentContextType {
   addPaymentMethod: (method: Omit<PaymentMethod, 'id'>) => void;
   updatePaymentMethod: (id: string, data: Partial<PaymentMethod>) => void;
   deletePaymentMethod: (id: string) => void;
+
+  // Category Budgets state & methods
+  categoryBudgets: CategoryBudgets;
+  categoryBudgetSummaries: CategoryBudgetSummary[];
+  totalBudget: number;
+  overallBudgetStatus: CategoryBudgetStatus;
+  exceededCategoriesCount: number;
+  updateCategoryBudget: (category: CategoryType, amount: number) => void;
+  updateAllCategoryBudgets: (budgets: CategoryBudgets) => void;
+  resetCategoryBudgets: () => void;
 
   theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
@@ -49,6 +76,8 @@ const STORAGE_KEY_METHODS = 'paytracker_methods_v1';
 const STORAGE_KEY_THEME = 'paytracker_theme_v1';
 const STORAGE_KEY_LIQUID_GLASS = 'paytracker_liquid_glass_v1';
 const STORAGE_KEY_SYNC_CODE = 'paytracker_sync_code_v1';
+const STORAGE_KEY_BUDGETS = 'paytracker_budgets_v1';
+
 
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
 
@@ -119,6 +148,41 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     return DEFAULT_PAYMENT_METHODS;
   });
+
+  // Load Category Budgets
+  const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudgets>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_BUDGETS);
+      if (saved) {
+        return { ...DEFAULT_CATEGORY_BUDGETS, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error('Failed to load category budgets from localStorage:', e);
+    }
+    return DEFAULT_CATEGORY_BUDGETS;
+  });
+
+  // Save Category Budgets
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_BUDGETS, JSON.stringify(categoryBudgets));
+  }, [categoryBudgets]);
+
+  const updateCategoryBudget = (category: CategoryType, amount: number) => {
+    setCategoryBudgets(prev => ({
+      ...prev,
+      [category]: Math.max(0, amount)
+    }));
+  };
+
+  const updateAllCategoryBudgets = (budgets: CategoryBudgets) => {
+    setCategoryBudgets(budgets);
+  };
+
+  const resetCategoryBudgets = () => {
+    setCategoryBudgets(DEFAULT_CATEGORY_BUDGETS);
+    localStorage.removeItem(STORAGE_KEY_BUDGETS);
+  };
+
 
   // Save Payment Methods
   useEffect(() => {
@@ -208,27 +272,89 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const monthHasPayments = payments.some(p => p.monthKey === currentMonthKey);
     if (!monthHasPayments && templates.length > 0) {
       const newMonthPayments: PaymentItem[] = templates
-        .filter(t => t.isRecurring)
-        .map(t => ({
-          id: `pay-${currentMonthKey}-${t.id}-${Date.now()}`,
-          templateId: t.id,
-          name: t.name,
-          amount: t.amount,
-          dueDay: t.dueDay,
-          category: t.category,
-          paymentMethodId: t.paymentMethodId,
-          isRecurring: true,
-          isPaid: false,
-          paidAt: null,
-          monthKey: currentMonthKey,
-          notes: t.notes
-        }));
+        .filter(t => t.commitmentType === 'savings' || CATEGORY_MAP[t.category]?.group === 'savings' || t.isRecurring)
+        .map(t => {
+          const type = t.commitmentType || (CATEGORY_MAP[t.category]?.group === 'savings' ? 'savings' : 'commitment');
+          return {
+            id: `pay-${currentMonthKey}-${t.id}-${Date.now()}`,
+            templateId: t.id,
+            name: t.name,
+            amount: t.amount,
+            dueDay: t.dueDay,
+            category: t.category,
+            commitmentType: type,
+            paymentMethodId: t.paymentMethodId,
+            isRecurring: type === 'savings' ? true : t.isRecurring,
+            isAutopayEnabled: t.isAutopayEnabled ?? false,
+            isPaid: false,
+            paidAt: null,
+            monthKey: currentMonthKey,
+            notes: t.notes
+          };
+        });
 
       if (newMonthPayments.length > 0) {
         setPayments(prev => [...prev, ...newMonthPayments]);
       }
     }
   }, [currentMonthKey, payments, templates]);
+
+  // Autopay 11:55 PM Auto-Check Engine
+  useEffect(() => {
+    const checkAutopayments = () => {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1; // 1-indexed
+      const currentDay = now.getDate();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      setPayments(prevPayments => {
+        let hasChanges = false;
+        const updated = prevPayments.map(item => {
+          if (!item.isAutopayEnabled || item.isPaid) return item;
+
+          const [itemYear, itemMonth] = item.monthKey.split('-').map(Number);
+          
+          const isPastMonth = itemYear < currentYear || (itemYear === currentYear && itemMonth < currentMonth);
+          const isCurrentMonth = itemYear === currentYear && itemMonth === currentMonth;
+
+          if (isPastMonth) {
+            hasChanges = true;
+            if (item.paymentMethodId) {
+              setPaymentMethods(methods =>
+                methods.map(m => m.id === item.paymentMethodId ? { ...m, balance: Math.max(0, m.balance - item.amount) } : m)
+              );
+            }
+            return { ...item, isPaid: true, paidAt: new Date().toISOString() };
+          }
+
+          if (isCurrentMonth) {
+            const isPastDueDay = currentDay > item.dueDay;
+            const isDueDayAtNight = currentDay === item.dueDay && (currentHour > 23 || (currentHour === 23 && currentMinute >= 55));
+
+            if (isPastDueDay || isDueDayAtNight) {
+              hasChanges = true;
+              if (item.paymentMethodId) {
+                setPaymentMethods(methods =>
+                  methods.map(m => m.id === item.paymentMethodId ? { ...m, balance: Math.max(0, m.balance - item.amount) } : m)
+                );
+              }
+              return { ...item, isPaid: true, paidAt: new Date().toISOString() };
+            }
+          }
+
+          return item;
+        });
+
+        return hasChanges ? updated : prevPayments;
+      });
+    };
+
+    checkAutopayments();
+    const interval = setInterval(checkAutopayments, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Month navigation helpers
   const goToNextMonth = () => {
@@ -294,23 +420,32 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Add Payment
   const addPayment = (data: Omit<PaymentItem, 'id' | 'monthKey' | 'isPaid' | 'paidAt'>) => {
     const newId = `pay-${currentMonthKey}-${Date.now()}`;
+    const resolvedType = data.commitmentType || (CATEGORY_MAP[data.category]?.group === 'savings' ? 'savings' : 'commitment');
+    const isSavings = resolvedType === 'savings';
+    const isAutoRecurring = isSavings ? true : data.isRecurring;
+
     const newItem: PaymentItem = {
       ...data,
+      commitmentType: resolvedType,
+      isRecurring: isAutoRecurring,
+      isAutopayEnabled: data.isAutopayEnabled ?? false,
       id: newId,
       monthKey: currentMonthKey,
       isPaid: false,
       paidAt: null
     };
 
-    if (data.isRecurring) {
+    if (isAutoRecurring) {
       const newTemplate: PaymentTemplate = {
         id: `tmpl-${Date.now()}`,
         name: data.name,
         amount: data.amount,
         dueDay: data.dueDay,
         category: data.category,
+        commitmentType: resolvedType,
         paymentMethodId: data.paymentMethodId,
         isRecurring: true,
+        isAutopayEnabled: data.isAutopayEnabled ?? false,
         notes: data.notes
       };
       setTemplates(prev => [...prev, newTemplate]);
@@ -326,6 +461,12 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       prev.map(item => {
         if (item.id === id) {
           const updated = { ...item, ...data };
+          if (data.category && !data.commitmentType) {
+            updated.commitmentType = CATEGORY_MAP[data.category]?.group === 'savings' ? 'savings' : 'commitment';
+          }
+          if (updated.commitmentType === 'savings') {
+            updated.isRecurring = true;
+          }
 
           // If payment was already paid and payment method or amount changed, adjust balance delta
           if (item.isPaid && item.paymentMethodId && data.amount !== undefined && data.amount !== item.amount) {
@@ -339,22 +480,26 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             );
           }
 
-          if (item.templateId && data.isRecurring) {
-            setTemplates(tmpls =>
-              tmpls.map(t =>
-                t.id === item.templateId
-                  ? {
-                      ...t,
-                      name: updated.name,
-                      amount: updated.amount,
-                      dueDay: updated.dueDay,
-                      category: updated.category,
-                      paymentMethodId: updated.paymentMethodId,
-                      notes: updated.notes
-                    }
-                  : t
-              )
-            );
+          if (item.templateId) {
+            if (updated.isRecurring) {
+              setTemplates(tmpls =>
+                tmpls.map(t =>
+                  t.id === item.templateId
+                    ? {
+                        ...t,
+                        name: updated.name,
+                        amount: updated.amount,
+                        dueDay: updated.dueDay,
+                        category: updated.category,
+                        commitmentType: updated.commitmentType,
+                        paymentMethodId: updated.paymentMethodId,
+                        isAutopayEnabled: updated.isAutopayEnabled,
+                        notes: updated.notes
+                      }
+                    : t
+                )
+              );
+            }
           }
           return updated;
         }
@@ -384,10 +529,12 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setPayments(INITIAL_PAYMENTS_SEPT_2026);
     setTemplates(DEFAULT_TEMPLATES);
     setPaymentMethods(DEFAULT_PAYMENT_METHODS);
+    setCategoryBudgets(DEFAULT_CATEGORY_BUDGETS);
     setCurrentMonthKey(INITIAL_MONTH);
     localStorage.removeItem(STORAGE_KEY_PAYMENTS);
     localStorage.removeItem(STORAGE_KEY_TEMPLATES);
     localStorage.removeItem(STORAGE_KEY_METHODS);
+    localStorage.removeItem(STORAGE_KEY_BUDGETS);
   };
 
   // Enable Cloud Sync
@@ -399,7 +546,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsCloudSyncActive(true);
     localStorage.setItem(STORAGE_KEY_SYNC_CODE, cleanCode);
 
-    await pushToCloudSync(cleanCode, { payments, templates });
+    await pushToCloudSync(cleanCode, { payments, templates, categoryBudgets });
     return true;
   };
 
@@ -419,6 +566,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         payments,
         templates,
         paymentMethods,
+        categoryBudgets,
         theme,
         isLiquidGlass
       },
@@ -438,6 +586,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
         if (Array.isArray(parsed.paymentMethods)) {
           setPaymentMethods(parsed.paymentMethods);
+        }
+        if (parsed.categoryBudgets) {
+          setCategoryBudgets(parsed.categoryBudgets);
         }
         if (parsed.theme) {
           setThemeState(parsed.theme);
@@ -464,6 +615,62 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .sort((a, b) => a.dueDay - b.dueDay);
   }, [payments, currentMonthKey]);
 
+  // Compute category budget summaries for current month
+  const categoryBudgetSummaries: CategoryBudgetSummary[] = useMemo(() => {
+    const categoriesInUse = new Set<CategoryType>([
+      ...currentMonthPayments.map(p => p.category),
+      ...(Object.keys(categoryBudgets) as CategoryType[]).filter(cat => (categoryBudgets[cat] || 0) > 0)
+    ]);
+
+    return Array.from(categoriesInUse).map(cat => {
+      const spentAmount = currentMonthPayments
+        .filter(p => p.category === cat)
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      const budgetAmount = categoryBudgets[cat] || 0;
+      const percentage = budgetAmount > 0 
+        ? Math.round((spentAmount / budgetAmount) * 100) 
+        : (spentAmount > 0 ? 100 : 0);
+
+      let status: CategoryBudgetStatus = 'normal';
+      if (budgetAmount > 0 && spentAmount >= budgetAmount) {
+        status = 'exceeded';
+      } else if (budgetAmount > 0 && spentAmount >= budgetAmount * 0.8) {
+        status = 'warning';
+      }
+
+      const overAmount = Math.max(0, spentAmount - budgetAmount);
+
+      return {
+        category: cat,
+        spentAmount,
+        budgetAmount,
+        percentage,
+        status,
+        overAmount
+      };
+    }).sort((a, b) => b.percentage - a.percentage);
+  }, [currentMonthPayments, categoryBudgets]);
+
+  const totalBudget = useMemo(() => {
+    return Object.values(categoryBudgets).reduce((acc, val) => acc + (val || 0), 0);
+  }, [categoryBudgets]);
+
+  const exceededCategoriesCount = useMemo(() => {
+    return categoryBudgetSummaries.filter(s => s.status === 'exceeded').length;
+  }, [categoryBudgetSummaries]);
+
+  const overallBudgetStatus: CategoryBudgetStatus = useMemo(() => {
+    if (exceededCategoriesCount > 0) return 'exceeded';
+    if (categoryBudgetSummaries.some(s => s.status === 'warning')) return 'warning';
+    return 'normal';
+  }, [exceededCategoriesCount, categoryBudgetSummaries]);
+
+  // Total liquid bank balance across all payment methods
+  const totalBankBalance = useMemo(() => {
+    return paymentMethods.reduce((sum, m) => sum + m.balance, 0);
+  }, [paymentMethods]);
+
   // Current month summary metrics
   const summary: MonthSummary = useMemo(() => {
     const totalAmount = currentMonthPayments.reduce((acc, p) => acc + p.amount, 0);
@@ -475,12 +682,14 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const paidCount = currentMonthPayments.filter(p => p.isPaid).length;
 
     const totalSavings = currentMonthPayments
-      .filter(p => CATEGORY_MAP[p.category]?.group === 'savings')
+      .filter(p => p.commitmentType === 'savings' || CATEGORY_MAP[p.category]?.group === 'savings')
       .reduce((acc, p) => acc + p.amount, 0);
 
     const totalExpense = currentMonthPayments
-      .filter(p => CATEGORY_MAP[p.category]?.group !== 'savings')
+      .filter(p => p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
       .reduce((acc, p) => acc + p.amount, 0);
+
+    const netFreeLiquidity = totalBankBalance - pendingAmount;
 
     return {
       monthKey: currentMonthKey,
@@ -492,9 +701,11 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       totalCount: currentMonthPayments.length,
       paidCount,
       totalSavings,
-      totalExpense
+      totalExpense,
+      totalBankBalance,
+      netFreeLiquidity
     };
-  }, [currentMonthPayments, currentMonthKey]);
+  }, [currentMonthPayments, currentMonthKey, totalBankBalance]);
 
   // Summaries of all unique months with records
   const allMonthSummaries: MonthSummary[] = useMemo(() => {
@@ -510,12 +721,14 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const paidCount = monthItems.filter(p => p.isPaid).length;
 
       const totalSavings = monthItems
-        .filter(p => CATEGORY_MAP[p.category]?.group === 'savings')
+        .filter(p => p.commitmentType === 'savings' || CATEGORY_MAP[p.category]?.group === 'savings')
         .reduce((acc, p) => acc + p.amount, 0);
 
       const totalExpense = monthItems
-        .filter(p => CATEGORY_MAP[p.category]?.group !== 'savings')
+        .filter(p => p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
         .reduce((acc, p) => acc + p.amount, 0);
+
+      const netFreeLiquidity = totalBankBalance - pendingAmount;
 
       return {
         monthKey: mKey,
@@ -527,10 +740,12 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         totalCount: monthItems.length,
         paidCount,
         totalSavings,
-        totalExpense
+        totalExpense,
+        totalBankBalance,
+        netFreeLiquidity
       };
     });
-  }, [payments]);
+  }, [payments, totalBankBalance]);
 
   return (
     <PaymentContext.Provider
@@ -551,6 +766,14 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addPaymentMethod,
         updatePaymentMethod,
         deletePaymentMethod,
+        categoryBudgets,
+        categoryBudgetSummaries,
+        totalBudget,
+        overallBudgetStatus,
+        exceededCategoriesCount,
+        updateCategoryBudget,
+        updateAllCategoryBudgets,
+        resetCategoryBudgets,
         theme,
         setTheme,
         isLiquidGlass,
@@ -570,6 +793,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     </PaymentContext.Provider>
   );
 };
+
 
 export const usePayments = (): PaymentContextType => {
   const context = useContext(PaymentContext);

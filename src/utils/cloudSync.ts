@@ -1,8 +1,8 @@
-import type { PaymentItem, PaymentTemplate } from '../types';
+import type { PaymentItem, PaymentTemplate, CategoryBudgets } from '../types';
 
 export const pushToCloudSync = async (
   syncCode: string,
-  data: { payments: PaymentItem[]; templates: PaymentTemplate[] }
+  data: { payments: PaymentItem[]; templates: PaymentTemplate[]; categoryBudgets?: CategoryBudgets }
 ): Promise<boolean> => {
   const cleanCode = syncCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
   if (!cleanCode) return false;
@@ -15,7 +15,8 @@ export const pushToCloudSync = async (
       body: JSON.stringify({
         updatedAt: new Date().toISOString(),
         payments: data.payments,
-        templates: data.templates
+        templates: data.templates,
+        categoryBudgets: data.categoryBudgets
       })
     });
     return response.ok;
@@ -27,7 +28,7 @@ export const pushToCloudSync = async (
 
 export const fetchLatestCloudSync = async (
   syncCode: string
-): Promise<{ payments: PaymentItem[]; templates: PaymentTemplate[] } | null> => {
+): Promise<{ payments: PaymentItem[]; templates: PaymentTemplate[]; categoryBudgets?: CategoryBudgets } | null> => {
   const cleanCode = syncCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
   if (!cleanCode) return null;
 
@@ -46,7 +47,8 @@ export const fetchLatestCloudSync = async (
       if (Array.isArray(payload.payments)) {
         return {
           payments: payload.payments,
-          templates: Array.isArray(payload.templates) ? payload.templates : []
+          templates: Array.isArray(payload.templates) ? payload.templates : [],
+          categoryBudgets: payload.categoryBudgets
         };
       }
     }
@@ -58,7 +60,7 @@ export const fetchLatestCloudSync = async (
 
 export const subscribeToCloudEvents = (
   syncCode: string,
-  onData: (data: { payments: PaymentItem[]; templates: PaymentTemplate[] }) => void
+  onData: (data: { payments: PaymentItem[]; templates: PaymentTemplate[]; categoryBudgets?: CategoryBudgets }) => void
 ): (() => void) | null => {
   const cleanCode = syncCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
   if (!cleanCode) return null;
@@ -76,7 +78,8 @@ export const subscribeToCloudEvents = (
           if (Array.isArray(payload.payments)) {
             onData({
               payments: payload.payments,
-              templates: Array.isArray(payload.templates) ? payload.templates : []
+              templates: Array.isArray(payload.templates) ? payload.templates : [],
+              categoryBudgets: payload.categoryBudgets
             });
           }
         }
@@ -84,6 +87,7 @@ export const subscribeToCloudEvents = (
         console.error('SSE parse error:', e);
       }
     };
+
 
     return () => {
       if (eventSource) {

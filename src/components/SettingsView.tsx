@@ -15,11 +15,17 @@ import {
   RefreshCw,
   Key,
   WifiOff,
-  Sparkles
+  Sparkles,
+  Target
 } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 
-export const SettingsView: React.FC = () => {
+interface SettingsViewProps {
+  onOpenBudgetModal?: () => void;
+}
+
+export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenBudgetModal }) => {
+
   const { 
     theme, 
     setTheme, 
@@ -240,8 +246,37 @@ export const SettingsView: React.FC = () => {
         </div>
       </div>
 
+      {/* Category Spending Limits Section */}
+      <div className="app-card p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+              <Target className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                Category Spending Limits
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Configure monthly caps per category and over-budget warnings
+              </p>
+            </div>
+          </div>
+
+          {onOpenBudgetModal && (
+            <button
+              onClick={onOpenBudgetModal}
+              className="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-600 dark:bg-orange-500 dark:hover:bg-orange-400 text-white shadow-xs transition-colors shrink-0"
+            >
+              Configure
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Cloud Sync (Multi-Device) Section */}
       <div className="app-card p-5 shadow-xs space-y-3">
+
         <div className="flex items-center space-x-2.5">
           <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
             <Cloud className="w-5 h-5" />

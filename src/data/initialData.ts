@@ -1,4 +1,5 @@
-import type { PaymentItem, PaymentTemplate, PaymentMethod } from '../types';
+import type { PaymentItem, PaymentTemplate, PaymentMethod, CategoryBudgets } from '../types';
+
 
 export const INITIAL_MONTH = '2026-09';
 
@@ -36,6 +37,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 15000,
     dueDay: 5,
     category: 'housing',
+    commitmentType: 'commitment',
     paymentMethodId: 'pm-1',
     isRecurring: true,
     notes: 'Apartment rent paid via HDFC Bank'
@@ -46,6 +48,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 2500,
     dueDay: 10,
     category: 'utilities',
+    commitmentType: 'commitment',
     paymentMethodId: 'pm-2',
     isRecurring: true,
     notes: 'State electricity board bill'
@@ -56,6 +59,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 1000,
     dueDay: 15,
     category: 'internet',
+    commitmentType: 'commitment',
     paymentMethodId: 'pm-2',
     isRecurring: true,
     notes: 'Fiber broadband monthly plan'
@@ -66,6 +70,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 6500,
     dueDay: 20,
     category: 'finance',
+    commitmentType: 'commitment',
     paymentMethodId: 'pm-1',
     isRecurring: true,
     notes: 'HDFC credit card bill payment'
@@ -76,8 +81,10 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 5000,
     dueDay: 5,
     category: 'investment',
+    commitmentType: 'savings',
     paymentMethodId: 'pm-3',
     isRecurring: true,
+    isAutopayEnabled: true,
     notes: 'Nifty 50 Index Fund auto-debit'
   },
   {
@@ -86,8 +93,10 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     amount: 2000,
     dueDay: 10,
     category: 'savings',
+    commitmentType: 'savings',
     paymentMethodId: 'pm-3',
     isRecurring: true,
+    isAutopayEnabled: true,
     notes: 'Post office savings scheme'
   }
 ];
@@ -100,6 +109,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 15000,
     dueDay: 5,
     category: 'housing',
+    commitmentType: 'commitment',
     paymentMethodId: 'pm-1',
     isRecurring: true,
     isPaid: true,
@@ -114,6 +124,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 2500,
     dueDay: 10,
     category: 'utilities',
+    commitmentType: 'commitment',
     paymentMethodId: 'pm-2',
     isRecurring: true,
     isPaid: true,
@@ -128,6 +139,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 1000,
     dueDay: 15,
     category: 'internet',
+    commitmentType: 'commitment',
     paymentMethodId: 'pm-2',
     isRecurring: true,
     isPaid: true,
@@ -142,6 +154,7 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 6500,
     dueDay: 20,
     category: 'finance',
+    commitmentType: 'commitment',
     paymentMethodId: 'pm-1',
     isRecurring: true,
     isPaid: false,
@@ -156,8 +169,10 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 5000,
     dueDay: 5,
     category: 'investment',
+    commitmentType: 'savings',
     paymentMethodId: 'pm-3',
     isRecurring: true,
+    isAutopayEnabled: true,
     isPaid: false,
     paidAt: null,
     monthKey: '2026-09',
@@ -170,11 +185,35 @@ export const INITIAL_PAYMENTS_SEPT_2026: PaymentItem[] = [
     amount: 2000,
     dueDay: 10,
     category: 'savings',
+    commitmentType: 'savings',
     paymentMethodId: 'pm-3',
     isRecurring: true,
+    isAutopayEnabled: true,
     isPaid: false,
     paidAt: null,
     monthKey: '2026-09',
     notes: 'Post office savings scheme'
   }
 ];
+
+export const DEFAULT_CATEGORY_BUDGETS: CategoryBudgets = {
+
+  housing: 20000,
+  utilities: 3000,
+  internet: 1500,
+  finance: 8000,
+  investment: 10000,
+  savings: 5000,
+  food: 10000,
+  healthcare: 5000,
+  education: 8000,
+  travel: 5000,
+  shopping: 6000,
+  entertainment: 3000,
+  insurance: 4000,
+  family: 5000,
+  personal_credit: 5000,
+  expense: 5000,
+  other: 3000
+};
+

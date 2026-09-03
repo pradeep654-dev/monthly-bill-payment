@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   ShieldCheck,
   Heart,
+  Users,
   type LucideIcon
 } from 'lucide-react';
 import type { CategoryType } from '../types';
@@ -39,6 +40,12 @@ export const CATEGORY_MAP: Record<CategoryType, CategoryInfo> = {
     icon: Receipt,
     group: 'expense',
     colorClasses: 'bg-orange-100/90 text-orange-800 dark:bg-orange-950/80 dark:text-orange-300 dark:border dark:border-orange-700/60'
+  },
+  personal_credit: {
+    label: 'Friends & Shop Udhar',
+    icon: Users,
+    group: 'expense',
+    colorClasses: 'bg-indigo-100/90 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 dark:border dark:border-indigo-700/60'
   },
   housing: {
     label: 'Housing & Rent',

@@ -15,12 +15,15 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   payment,
   onEdit
 }) => {
-  const { togglePaid, paymentMethods, currentMonthKey, isLiquidGlass } = usePayments();
+  const { togglePaid, paymentMethods, currentMonthKey, isLiquidGlass, categoryBudgetSummaries } = usePayments();
   const categoryMeta = getCategoryMeta(payment.category);
   const IconComponent = categoryMeta.icon;
 
   const linkedAccount = paymentMethods.find(m => m.id === payment.paymentMethodId);
   const urgency = getUrgencyStatus(payment.dueDay, currentMonthKey, payment.isPaid);
+  const categoryBudget = categoryBudgetSummaries.find(s => s.category === payment.category);
+  const isCategoryOverBudget = categoryBudget?.status === 'exceeded';
+
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -87,10 +90,40 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
               {categoryMeta.label}
             </span>
 
+            {/* Recurrence & Type Badge */}
+            {payment.commitmentType === 'savings' || categoryMeta.group === 'savings' ? (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700/60">
+                🏦 Savings • Auto Every Month
+              </span>
+            ) : payment.isRecurring ? (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                🔁 Every Month
+              </span>
+            ) : (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                📌 Current Month Only
+              </span>
+            )}
+
+            {/* Autopay Badge */}
+            {payment.isAutopayEnabled && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 flex items-center space-x-1">
+                <span>⚡ Autopay @ 11:55 PM</span>
+              </span>
+            )}
+
+            {/* Over Budget Category Warning Badge */}
+            {isCategoryOverBudget && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+                ⚠️ Budget Cap Exceeded
+              </span>
+            )}
+
             {/* Urgency Badge */}
             <span className={`text-[10px] px-2.5 py-0.5 rounded-full shrink-0 font-black ${urgency.colorClass}`}>
               {urgency.label}
             </span>
+
 
             {/* Linked Account Badge */}
             {linkedAccount && (

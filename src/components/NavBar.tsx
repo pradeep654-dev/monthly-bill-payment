@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, History, Settings } from 'lucide-react';
+import { Home, CreditCard, PiggyBank, Target, Settings } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import type { ActiveTab } from '../types';
 
@@ -8,9 +8,12 @@ export const NavBar: React.FC = () => {
 
   const navItems: { id: ActiveTab; label: string; icon: typeof Home }[] = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'history', label: 'History', icon: History },
+    { id: 'commitments', label: 'Bills', icon: CreditCard },
+    { id: 'savings', label: 'Savings', icon: PiggyBank },
+    { id: 'budget', label: 'Budget', icon: Target },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none pb-safe">
