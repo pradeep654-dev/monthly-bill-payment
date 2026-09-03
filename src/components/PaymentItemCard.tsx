@@ -112,6 +112,24 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
               </span>
             )}
 
+            {/* Mandatory / Discretionary Tag Badge */}
+            {payment.isMandatory !== false ? (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
+                🔒 Mandatory
+              </span>
+            ) : (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+                🎨 Discretionary
+              </span>
+            )}
+
+            {/* Insufficient Account Balance Overdraft Warning */}
+            {!payment.isPaid && linkedAccount && payment.amount > linkedAccount.balance && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+                ⚠️ Account Shortage (Short by {formatCurrency(payment.amount - linkedAccount.balance)})
+              </span>
+            )}
+
             {/* Over Budget Category Warning Badge */}
             {isCategoryOverBudget && (
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">

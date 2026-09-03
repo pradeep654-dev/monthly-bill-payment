@@ -1,16 +1,19 @@
 import React from 'react';
-import { PieChart } from 'lucide-react';
+import { PieChart, TrendingUp, ShieldCheck, Lock, Palette } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { formatCurrency } from '../utils/formatters';
 import { getCategoryMeta } from '../utils/categories';
 import type { CategoryType } from '../types';
 
 export const DashboardChartCard: React.FC = () => {
-  const { summary, currentMonthPayments } = usePayments();
+  const { summary, currentMonthPayments, allMonthSummaries } = usePayments();
 
   const totalAllocated = summary.totalSavings + summary.totalExpense;
   const savingsPct = totalAllocated > 0 ? Math.round((summary.totalSavings / totalAllocated) * 100) : 0;
   const expensePct = totalAllocated > 0 ? Math.round((summary.totalExpense / totalAllocated) * 100) : 0;
+
+  const mandatoryPct = summary.totalAmount > 0 ? Math.round((summary.mandatoryTotal / summary.totalAmount) * 100) : 100;
+  const discretionaryPct = 100 - mandatoryPct;
 
   // Calculate top category spending
   const categoryTotals = currentMonthPayments.reduce((acc, p) => {
@@ -25,11 +28,66 @@ export const DashboardChartCard: React.FC = () => {
       meta: getCategoryMeta(cat)
     }))
     .sort((a, b) => b.amount - a.amount)
-    .slice(0, 4); // Top 4 categories
+    .slice(0, 4);
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Chart Card Container */}
+      {/* 1. Emergency Survival Runway & Mandatory Split Card */}
+      <div className="app-card p-5 space-y-3 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="p-2 rounded-xl bg-indigo-500 text-white shadow-md">
+              <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 block">
+                Emergency Runway Buffer
+              </span>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                Survival Buffer ({summary.survivalRunwayMonths} Months)
+              </h3>
+            </div>
+          </div>
+
+          <span className="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 text-[10px] font-black">
+            🛡️ {summary.survivalRunwayMonths} MO BUFFER
+          </span>
+        </div>
+
+        {/* Mandatory vs Discretionary Progress Bar */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex justify-between text-xs font-extrabold">
+            <span className="text-indigo-700 dark:text-indigo-300 flex items-center space-x-1">
+              <Lock className="w-3 h-3 inline mr-1" />
+              Mandatory Survival ({mandatoryPct}%)
+            </span>
+            <span className="text-purple-600 dark:text-purple-400 flex items-center space-x-1">
+              <Palette className="w-3 h-3 inline mr-1" />
+              Discretionary ({discretionaryPct}%)
+            </span>
+          </div>
+
+          <div className="w-full bg-slate-200/60 dark:bg-slate-800 h-3 rounded-xl overflow-hidden p-0.5 flex space-x-1">
+            <div
+              className="h-full rounded-lg bg-indigo-500 transition-all duration-500"
+              style={{ width: `${mandatoryPct}%` }}
+              title={`Mandatory: ${formatCurrency(summary.mandatoryTotal)}`}
+            />
+            {discretionaryPct > 0 && (
+              <div
+                className="h-full rounded-lg bg-purple-500 transition-all duration-500"
+                style={{ width: `${discretionaryPct}%` }}
+                title={`Discretionary: ${formatCurrency(summary.discretionaryTotal)}`}
+              />
+            )}
+          </div>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+            Your bank balance ({formatCurrency(summary.totalBankBalance)}) can cover {summary.survivalRunwayMonths} months of mandatory survival costs ({formatCurrency(summary.mandatoryTotal)}/mo).
+          </p>
+        </div>
+      </div>
+
+      {/* 2. Cashflow Allocation & Category Distribution Chart Card */}
       <div className="app-card p-5 space-y-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -123,6 +181,47 @@ export const DashboardChartCard: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* 3. Multi-Month Net Worth & Cumulative Wealth Growth */}
+      <div className="app-card p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="p-2 rounded-xl bg-emerald-500 text-white shadow-md">
+              <TrendingUp className="w-4 h-4 stroke-[2.5]" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 block">
+                Wealth Trend
+              </span>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                Multi-Month Savings Growth
+              </h3>
+            </div>
+          </div>
+
+          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+            {allMonthSummaries.length} Month Record
+          </span>
+        </div>
+
+        <div className="space-y-2 pt-1">
+          {allMonthSummaries.slice(0, 3).map(mSummary => (
+            <div key={mSummary.monthKey} className="p-3 rounded-2xl bg-slate-50 dark:bg-[#0D1117] flex items-center justify-between border border-slate-100 dark:border-slate-800">
+              <div>
+                <span className="text-xs font-black text-slate-900 dark:text-white block">
+                  {mSummary.monthName}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                  Savings: {formatCurrency(mSummary.totalSavings)} • Dues: {formatCurrency(mSummary.totalExpense)}
+                </span>
+              </div>
+              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(mSummary.totalBankBalance)} Cash
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

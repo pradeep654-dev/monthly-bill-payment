@@ -43,6 +43,7 @@ export interface PaymentItem {
   upiId?: string; // Optional VPA/UPI ID e.g. "landlord@upi"
   isRecurring: boolean;
   isAutopayEnabled?: boolean; // Autopay at 11:55 PM on due date
+  isMandatory?: boolean; // Mandatory survival bill vs discretionary flexible spend
   notes?: string;
   isPaid: boolean;
   paidAt?: string | null;
@@ -60,6 +61,7 @@ export interface PaymentTemplate {
   upiId?: string;
   isRecurring: boolean;
   isAutopayEnabled?: boolean;
+  isMandatory?: boolean;
   notes?: string;
 }
 
@@ -76,6 +78,11 @@ export interface MonthSummary {
   totalExpense: number;
   totalBankBalance: number;
   netFreeLiquidity: number;
+  monthlyIncome: number;
+  leftoverIncome: number;
+  mandatoryTotal: number;
+  discretionaryTotal: number;
+  survivalRunwayMonths: number;
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';

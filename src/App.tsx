@@ -7,6 +7,7 @@ import { PaymentAccountsBar } from './components/PaymentAccountsBar';
 
 import { CommitmentLoadCard } from './components/CommitmentLoadCard';
 import { DashboardChartCard } from './components/DashboardChartCard';
+import { SalaryCreditCard } from './components/SalaryCreditCard';
 import { CommitmentsView } from './components/CommitmentsView';
 import { SavingsView } from './components/SavingsView';
 import { BudgetHealthView } from './components/BudgetHealthView';
@@ -58,6 +59,7 @@ const MainContent: React.FC = () => {
           {activeTab === 'home' && (
             <>
               <OverviewCard />
+              <SalaryCreditCard />
               <PaymentAccountsBar />
               <DashboardChartCard />
               <CommitmentLoadCard />

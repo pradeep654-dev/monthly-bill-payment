@@ -40,6 +40,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     commitmentType: 'commitment',
     paymentMethodId: 'pm-1',
     isRecurring: true,
+    isMandatory: true,
     notes: 'Apartment rent paid via HDFC Bank'
   },
   {
@@ -51,6 +52,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     commitmentType: 'commitment',
     paymentMethodId: 'pm-2',
     isRecurring: true,
+    isMandatory: true,
     notes: 'State electricity board bill'
   },
   {
@@ -62,6 +64,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     commitmentType: 'commitment',
     paymentMethodId: 'pm-2',
     isRecurring: true,
+    isMandatory: true,
     notes: 'Fiber broadband monthly plan'
   },
   {
@@ -73,6 +76,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     commitmentType: 'commitment',
     paymentMethodId: 'pm-1',
     isRecurring: true,
+    isMandatory: true,
     notes: 'HDFC credit card bill payment'
   },
   {
@@ -85,6 +89,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     paymentMethodId: 'pm-3',
     isRecurring: true,
     isAutopayEnabled: true,
+    isMandatory: true,
     notes: 'Nifty 50 Index Fund auto-debit'
   },
   {
@@ -97,6 +102,7 @@ export const DEFAULT_TEMPLATES: PaymentTemplate[] = [
     paymentMethodId: 'pm-3',
     isRecurring: true,
     isAutopayEnabled: true,
+    isMandatory: true,
     notes: 'Post office savings scheme'
   }
 ];

@@ -41,6 +41,7 @@ interface PaymentContextType {
   addPaymentMethod: (method: Omit<PaymentMethod, 'id'>) => void;
   updatePaymentMethod: (id: string, data: Partial<PaymentMethod>) => void;
   deletePaymentMethod: (id: string) => void;
+  fundMonth: (amount?: number) => void;
 
   // Category Budgets state & methods
   categoryBudgets: CategoryBudgets;
@@ -666,6 +667,35 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return 'normal';
   }, [exceededCategoriesCount, categoryBudgetSummaries]);
 
+  // Monthly Income State (Default 80,000 INR)
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(80000);
+  const [salaryCreditedMonths, setSalaryCreditedMonths] = useState<string[]>([]);
+
+  // Auto-credit ₹80,000 Salary on 1st of month to primary HDFC bank account
+  useEffect(() => {
+    if (!salaryCreditedMonths.includes(currentMonthKey)) {
+      setPaymentMethods(methods =>
+        methods.map(m =>
+          m.id === 'pm-1' || m.type === 'bank'
+            ? { ...m, balance: m.balance + monthlyIncome, initialBalance: m.initialBalance + monthlyIncome }
+            : m
+        )
+      );
+      setSalaryCreditedMonths(prev => [...prev, currentMonthKey]);
+    }
+  }, [currentMonthKey, monthlyIncome, salaryCreditedMonths]);
+
+  const fundMonth = (amount: number = 80000) => {
+    setMonthlyIncome(amount);
+    setPaymentMethods(methods =>
+      methods.map(m =>
+        m.id === 'pm-1' || m.type === 'bank'
+          ? { ...m, balance: m.balance + amount }
+          : m
+      )
+    );
+  };
+
   // Total liquid bank balance across all payment methods
   const totalBankBalance = useMemo(() => {
     return paymentMethods.reduce((sum, m) => sum + m.balance, 0);
@@ -689,7 +719,15 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .filter(p => p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
       .reduce((acc, p) => acc + p.amount, 0);
 
+    const mandatoryTotal = currentMonthPayments
+      .filter(p => p.isMandatory !== false)
+      .reduce((acc, p) => acc + p.amount, 0);
+
+    const discretionaryTotal = totalAmount - mandatoryTotal;
+
     const netFreeLiquidity = totalBankBalance - pendingAmount;
+    const leftoverIncome = Math.max(0, monthlyIncome - totalAmount);
+    const survivalRunwayMonths = mandatoryTotal > 0 ? Number((totalBankBalance / mandatoryTotal).toFixed(1)) : 12;
 
     return {
       monthKey: currentMonthKey,
@@ -703,9 +741,14 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       totalSavings,
       totalExpense,
       totalBankBalance,
-      netFreeLiquidity
+      netFreeLiquidity,
+      monthlyIncome,
+      leftoverIncome,
+      mandatoryTotal,
+      discretionaryTotal,
+      survivalRunwayMonths
     };
-  }, [currentMonthPayments, currentMonthKey, totalBankBalance]);
+  }, [currentMonthPayments, currentMonthKey, totalBankBalance, monthlyIncome]);
 
   // Summaries of all unique months with records
   const allMonthSummaries: MonthSummary[] = useMemo(() => {
@@ -728,7 +771,14 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .filter(p => p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
         .reduce((acc, p) => acc + p.amount, 0);
 
+      const mandatoryTotal = monthItems
+        .filter(p => p.isMandatory !== false)
+        .reduce((acc, p) => acc + p.amount, 0);
+
+      const discretionaryTotal = totalAmount - mandatoryTotal;
       const netFreeLiquidity = totalBankBalance - pendingAmount;
+      const leftoverIncome = Math.max(0, monthlyIncome - totalAmount);
+      const survivalRunwayMonths = mandatoryTotal > 0 ? Number((totalBankBalance / mandatoryTotal).toFixed(1)) : 12;
 
       return {
         monthKey: mKey,
@@ -742,10 +792,15 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         totalSavings,
         totalExpense,
         totalBankBalance,
-        netFreeLiquidity
+        netFreeLiquidity,
+        monthlyIncome,
+        leftoverIncome,
+        mandatoryTotal,
+        discretionaryTotal,
+        survivalRunwayMonths
       };
     });
-  }, [payments, totalBankBalance]);
+  }, [payments, totalBankBalance, monthlyIncome]);
 
   return (
     <PaymentContext.Provider
@@ -766,6 +821,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addPaymentMethod,
         updatePaymentMethod,
         deletePaymentMethod,
+        fundMonth,
         categoryBudgets,
         categoryBudgetSummaries,
         totalBudget,

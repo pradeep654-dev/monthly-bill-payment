@@ -26,6 +26,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [upiId, setUpiId] = useState('');
   const [isRecurring, setIsRecurring] = useState(true);
   const [isAutopayEnabled, setIsAutopayEnabled] = useState(false);
+  const [isMandatory, setIsMandatory] = useState(true);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 
@@ -41,6 +42,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setUpiId(editingPayment.upiId || '');
       setIsRecurring(type === 'savings' ? true : editingPayment.isRecurring);
       setIsAutopayEnabled(editingPayment.isAutopayEnabled ?? (type === 'savings'));
+      setIsMandatory(editingPayment.isMandatory !== false);
       setNotes(editingPayment.notes || '');
     } else {
       setCommitmentType('commitment');
@@ -52,6 +54,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setUpiId('');
       setIsRecurring(true);
       setIsAutopayEnabled(false);
+      setIsMandatory(true);
       setNotes('');
     }
     setError('');
@@ -64,6 +67,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     if (newType === 'savings') {
       setIsRecurring(true);
       setIsAutopayEnabled(true);
+      setIsMandatory(true);
       if (category !== 'savings' && category !== 'investment') {
         setCategory('savings');
       }
@@ -77,6 +81,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setCommitmentType('savings');
       setIsRecurring(true);
       setIsAutopayEnabled(true);
+      setIsMandatory(true);
     }
   };
 
@@ -105,6 +110,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         upiId: upiId.trim(),
         isRecurring: finalIsRecurring,
         isAutopayEnabled,
+        isMandatory,
         notes: notes.trim()
       });
     } else {
@@ -118,6 +124,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         upiId: upiId.trim(),
         isRecurring: finalIsRecurring,
         isAutopayEnabled,
+        isMandatory,
         notes: notes.trim()
       });
     }
@@ -376,6 +383,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 }`}
               />
             </button>
+          </div>
+
+          {/* Mandatory vs Discretionary Toggle */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Expense Priority Nature
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setIsMandatory(true)}
+                className={`p-2.5 rounded-2xl border text-center font-extrabold text-xs transition-all ${
+                  isMandatory
+                    ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                    : 'bg-slate-50 dark:bg-[#0D1117] border-slate-200 dark:border-slate-800 text-slate-500'
+                }`}
+              >
+                🔒 Mandatory (Survival)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMandatory(false)}
+                className={`p-2.5 rounded-2xl border text-center font-extrabold text-xs transition-all ${
+                  !isMandatory
+                    ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-700 dark:text-purple-300 shadow-xs'
+                    : 'bg-slate-50 dark:bg-[#0D1117] border-slate-200 dark:border-slate-800 text-slate-500'
+                }`}
+              >
+                🎨 Discretionary (Flexible)
+              </button>
+            </div>
           </div>
 
           {/* Notes */}
