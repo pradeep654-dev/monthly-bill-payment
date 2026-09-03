@@ -45,6 +45,7 @@ interface PaymentContextType {
   salarySplitPercent: number;
   updateSalarySettings: (income: number, splitPercent: number) => void;
   runSalaryCreditAndSplit: (incomeAmt?: number, splitPct?: number) => void;
+  runAutoSweepEngine: (sweepThreshold?: number) => void;
 
   // Category Budgets state & methods
   categoryBudgets: CategoryBudgets;
@@ -357,11 +358,24 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
             if (isPastDueDay || isDueDayAtNight) {
               hasChanges = true;
-              if (item.paymentMethodId) {
-                setPaymentMethods(methods =>
-                  methods.map(m => m.id === item.paymentMethodId ? { ...m, balance: Math.max(0, m.balance - item.amount) } : m)
+              
+              setPaymentMethods(methods => {
+                const targetMethod = methods.find(m => m.id === item.paymentMethodId);
+                let chosenMethodId = item.paymentMethodId;
+
+                // Smart Reroute Bounce Prevention: if assigned account is short, reroute to account with highest balance
+                if (!targetMethod || targetMethod.balance < item.amount) {
+                  const solventMethod = methods.find(m => m.balance >= item.amount);
+                  if (solventMethod) {
+                    chosenMethodId = solventMethod.id;
+                  }
+                }
+
+                return methods.map(m =>
+                  m.id === chosenMethodId ? { ...m, balance: Math.max(0, m.balance - item.amount) } : m
                 );
-              }
+              });
+
               return { ...item, isPaid: true, paidAt: new Date().toISOString() };
             }
           }
@@ -732,6 +746,27 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     runSalaryCreditAndSplit(amount, salarySplitPercent);
   };
 
+  // Auto-Sweeper Surplus Investment Engine (Sweeps unspent surplus into 7.2% Liquid Fund)
+  const runAutoSweepEngine = (sweepThreshold: number = 40000) => {
+    const freeLiquidity = totalBankBalance - summary.pendingAmount;
+    if (freeLiquidity > sweepThreshold) {
+      const surplusAmt = Math.round(freeLiquidity - sweepThreshold);
+      if (surplusAmt >= 1000) {
+        addPayment({
+          name: '🎯 Sweep Liquid Fund (7.2% Yield)',
+          amount: surplusAmt,
+          dueDay: new Date().getDate(),
+          category: 'investment',
+          commitmentType: 'savings',
+          paymentMethodId: 'pm-1',
+          isRecurring: true,
+          isAutopayEnabled: true,
+          notes: 'Auto-swept idle surplus cash into 7.2% Liquid Mutual Fund'
+        });
+      }
+    }
+  };
+
   // Total liquid bank balance across all payment methods
   const totalBankBalance = useMemo(() => {
     return paymentMethods.reduce((sum, m) => sum + m.balance, 0);
@@ -873,6 +908,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         salarySplitPercent,
         updateSalarySettings,
         runSalaryCreditAndSplit,
+        runAutoSweepEngine,
         categoryBudgets,
         categoryBudgetSummaries,
         totalBudget,

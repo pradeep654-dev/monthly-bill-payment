@@ -19,7 +19,8 @@ import {
   Target,
   Banknote,
   Sliders,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Zap
 } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { SalarySettingsModal } from './SalarySettingsModal';
@@ -44,7 +45,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenBudgetModal })
     enableCloudSync,
     disableCloudSync,
     summary,
-    salarySplitPercent
+    salarySplitPercent,
+    runAutoSweepEngine
   } = usePayments();
 
   const [importMessage, setImportMessage] = useState<{ text: string; success: boolean } | null>(null);
@@ -288,6 +290,37 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenBudgetModal })
           <span className="font-mono text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 font-black shrink-0 whitespace-nowrap">
             {100 - (salarySplitPercent || 50)}/{salarySplitPercent || 50} Split
           </span>
+        </div>
+      </div>
+
+      {/* Auto-Sweeper Zero-Idle Surplus Investment Engine Section */}
+      <div className="app-card p-5 shadow-xs space-y-3 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-transparent border border-amber-500/20">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-amber-500 text-white shadow-md shadow-amber-500/20 shrink-0">
+              <Zap className="w-5 h-5 fill-current" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight truncate">
+                Auto-Sweeper Zero-Idle Wealth Engine
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                Sweeps unspent liquid surplus into 7.2% Yield Mutual Funds / Sweep FD
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => runAutoSweepEngine(40000)}
+            className="px-3 py-1.5 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-transform hover:scale-105 active:scale-95 shrink-0 flex items-center space-x-1"
+          >
+            <span>Run Sweep</span>
+          </button>
+        </div>
+
+        <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-xs font-semibold">
+          <span className="text-amber-800 dark:text-amber-300 font-extrabold">Safe Reserve Threshold: ₹40,000</span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-black">⚡ 7.2% Yield</span>
         </div>
       </div>
 
