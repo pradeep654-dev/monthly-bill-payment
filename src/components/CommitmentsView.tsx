@@ -3,7 +3,7 @@ import { Receipt, Plus, Repeat, Calendar, CreditCard } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { PaymentItemCard } from './PaymentItemCard';
 import type { PaymentItem } from '../types';
-import { formatCurrency, getUrgencyStatus } from '../utils/formatters';
+import { formatCurrency, getUrgencyStatus, sortByUpcomingAndDate } from '../utils/formatters';
 import { getCategoryMeta } from '../utils/categories';
 
 interface CommitmentsViewProps {
@@ -39,17 +39,19 @@ export const CommitmentsView: React.FC<CommitmentsViewProps> = ({
   const recurringTotal = recurringItems.reduce((sum, p) => sum + p.amount, 0);
   const currentMonthTotal = currentMonthItems.reduce((sum, p) => sum + p.amount, 0);
 
-  // Apply sub-filter
-  const filteredCommitments = commitmentItems.filter(payment => {
-    if (subFilter === 'recurring') return payment.isRecurring;
-    if (subFilter === 'current') return !payment.isRecurring;
-    if (subFilter === 'unpaid') return !payment.isPaid;
-    if (subFilter === 'overdue') {
-      const urgency = getUrgencyStatus(payment.dueDay, currentMonthKey, payment.isPaid);
-      return urgency.status === 'overdue';
-    }
-    return true;
-  });
+  // Apply sub-filter & sort upcoming cards on top date-wise
+  const filteredCommitments = sortByUpcomingAndDate(
+    commitmentItems.filter(payment => {
+      if (subFilter === 'recurring') return payment.isRecurring;
+      if (subFilter === 'current') return !payment.isRecurring;
+      if (subFilter === 'unpaid') return !payment.isPaid;
+      if (subFilter === 'overdue') {
+        const urgency = getUrgencyStatus(payment.dueDay, currentMonthKey, payment.isPaid);
+        return urgency.status === 'overdue';
+      }
+      return true;
+    })
+  );
 
   return (
     <div className="space-y-4 animate-fade-in">

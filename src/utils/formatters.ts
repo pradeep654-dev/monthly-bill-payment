@@ -143,3 +143,21 @@ export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?:
   const nameEncoded = encodeURIComponent(payeeName);
   return vpa ? `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR` : `upi://pay`;
 };
+
+/**
+ * Sorts payment items placing upcoming (unpaid & unskipped) items on top,
+ * sorted date-wise by dueDay ascending. Paid and Skipped items follow below,
+ * also sorted date-wise by dueDay ascending.
+ */
+export const sortByUpcomingAndDate = <T extends { dueDay: number; isPaid: boolean; isSkipped?: boolean }>(items: T[]): T[] => {
+  return [...items].sort((a, b) => {
+    const aUpcoming = !a.isPaid && !a.isSkipped;
+    const bUpcoming = !b.isPaid && !b.isSkipped;
+
+    if (aUpcoming && !bUpcoming) return -1;
+    if (!aUpcoming && bUpcoming) return 1;
+
+    return a.dueDay - b.dueDay;
+  });
+};
+

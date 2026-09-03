@@ -3,7 +3,7 @@ import { PiggyBank, Plus, Repeat } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { PaymentItemCard } from './PaymentItemCard';
 import type { PaymentItem } from '../types';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, sortByUpcomingAndDate } from '../utils/formatters';
 import { getCategoryMeta } from '../utils/categories';
 
 interface SavingsViewProps {
@@ -19,9 +19,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 }) => {
   const { currentMonthPayments, summary, paymentMethods, isLiquidGlass } = usePayments();
 
-  // Filter savings items
-  const savingsItems = currentMonthPayments.filter(
-    p => p.commitmentType === 'savings' || getCategoryMeta(p.category).group === 'savings'
+  // Filter savings items (upcoming cards on top, sorted date-wise)
+  const savingsItems = sortByUpcomingAndDate(
+    currentMonthPayments.filter(
+      p => p.commitmentType === 'savings' || getCategoryMeta(p.category).group === 'savings'
+    )
   );
 
   const totalSavingsAmount = savingsItems.reduce((sum, p) => sum + p.amount, 0);

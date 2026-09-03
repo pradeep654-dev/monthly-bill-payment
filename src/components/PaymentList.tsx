@@ -3,7 +3,7 @@ import { Plus, CreditCard, PiggyBank, Receipt, Repeat, Calendar } from 'lucide-r
 import { usePayments } from '../context/PaymentContext';
 import { PaymentItemCard } from './PaymentItemCard';
 import type { PaymentItem, UrgencyFilter } from '../types';
-import { getUrgencyStatus, formatCurrency } from '../utils/formatters';
+import { getUrgencyStatus, formatCurrency, sortByUpcomingAndDate } from '../utils/formatters';
 import { getCategoryMeta } from '../utils/categories';
 
 interface PaymentListProps {
@@ -43,8 +43,8 @@ export const PaymentList: React.FC<PaymentListProps> = ({
     });
   };
 
-  const filteredSavings = applyFilter(savingsItems);
-  const filteredCommitments = applyFilter(commitmentItems);
+  const filteredSavings = sortByUpcomingAndDate(applyFilter(savingsItems));
+  const filteredCommitments = sortByUpcomingAndDate(applyFilter(commitmentItems));
   const totalFilteredCount = filteredSavings.length + filteredCommitments.length;
 
   const totalSavingsSum = savingsItems.reduce((acc, p) => acc + p.amount, 0);
