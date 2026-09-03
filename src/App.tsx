@@ -92,7 +92,7 @@ const MainContent: React.FC = () => {
         </main>
 
         {/* Dynamic Theme-Adaptive Floating Round Payri AI Button (Fixed for Mobile & PC) */}
-        <div className="fixed bottom-[92px] right-4 sm:right-[calc(50vw-13rem)] z-50">
+        <div className="fixed bottom-[115px] mb-2 right-4 sm:right-[calc(50vw-13rem)] z-50">
           <button
             onClick={() => setIsAiModalOpen(true)}
             className={`w-13 h-13 rounded-full flex flex-col items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 shadow-2xl group ${
