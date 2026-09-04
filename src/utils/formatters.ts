@@ -137,41 +137,101 @@ export const getCleanPhoneNumber = (input?: string): string | null => {
   return null;
 };
 
+export interface UpiTargetAppInfo {
+  appName: 'PhonePe' | 'GPay' | 'Paytm' | 'UPI';
+  url: string;
+  badgeBg: string;
+  badgeText: string;
+  badgeBorder: string;
+  brandLabel: string;
+}
+
 /**
- * Generates Paytm UPI payment deep link URL targeting Paytm explicitly.
- * Uses Android intent URL targeting net.one97.paytm package with scheme=upi
- * and iOS paytmmp://upi/pay scheme for non-Paytm handles (@ybl, @oksbi, etc.)
- * so Paytm opens directly without throwing "Invalid UPI ID" or launching WhatsApp.
+ * Automatically inspects the UPI ID handle and returns the exact matching app deep link URL
+ * (PhonePe for @ybl, GPay for @oksbi, Paytm for @paytm/mobile, universal UPI for others).
+ * Prevents Paytm's internal "Invalid UPI ID" error caused by deep linking non-Paytm handles into Paytm.
  */
-export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
+export const getUpiTargetAppInfo = (payeeName: string, amount: number, upiId?: string): UpiTargetAppInfo => {
   const nameEncoded = encodeURIComponent(payeeName.trim());
   const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
 
   if (!upiId || !upiId.trim()) {
-    return isAndroid
-      ? `intent://pay#Intent;scheme=upi;package=net.one97.paytm;end`
-      : `paytmmp://upi/pay`;
+    return {
+      appName: 'Paytm',
+      url: isAndroid ? `intent://pay#Intent;scheme=upi;package=net.one97.paytm;end` : `paytmmp://pay`,
+      badgeBg: 'bg-[#002970]',
+      badgeText: 'text-white',
+      badgeBorder: 'border-[#00BAF2]/60',
+      brandLabel: 'Paytm'
+    };
   }
 
   const phone = getCleanPhoneNumber(upiId);
   const vpa = phone ? `${phone}@paytm` : upiId.trim();
+  const lowerVpa = vpa.toLowerCase();
   const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
-  if (isAndroid) {
-    // Android Intent specifically targeting net.one97.paytm with scheme=upi
-    // This forces Paytm to process ALL VPA handles (@ybl, @oksbi, @paytm) without "Invalid UPI ID" error
-    return `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`;
+  // 1. PhonePe VPAs (@ybl, @ibl, @axl) -> Direct to PhonePe
+  if (lowerVpa.endsWith('@ybl') || lowerVpa.endsWith('@ibl') || lowerVpa.endsWith('@axl')) {
+    const url = isAndroid
+      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`
+      : `phonepe://pay?${upiQuery}`;
+    return {
+      appName: 'PhonePe',
+      url,
+      badgeBg: 'bg-[#5f259f]',
+      badgeText: 'text-white',
+      badgeBorder: 'border-purple-400/60',
+      brandLabel: 'PhonePe'
+    };
   }
 
-  // iOS / Other:
-  // For @paytm handles, paytmmp://pay works directly.
-  // For external handles like @ybl, @oksbi, paytmmp://upi/pay triggers Paytm's NPCI UPI parser instead of internal user lookup.
-  const isPaytmHandle = vpa.toLowerCase().endsWith('@paytm');
-  if (isPaytmHandle) {
-    return `paytmmp://pay?${upiQuery}`;
+  // 2. Google Pay VPAs (@oksbi, @okaxis, @okicici, @okhdfcbank) -> Direct to GPay
+  if (lowerVpa.includes('@ok')) {
+    const url = isAndroid
+      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.google.android.apps.n26;end`
+      : `gpay://upi/pay?${upiQuery}`;
+    return {
+      appName: 'GPay',
+      url,
+      badgeBg: 'bg-slate-900 dark:bg-slate-800',
+      badgeText: 'text-white',
+      badgeBorder: 'border-blue-400/60',
+      brandLabel: 'GPay'
+    };
   }
 
-  return `paytmmp://upi/pay?${upiQuery}`;
+  // 3. Paytm VPAs (@paytm, @ptsbi) or 10-digit phone number -> Direct to Paytm
+  if (lowerVpa.endsWith('@paytm') || lowerVpa.includes('@pt') || phone) {
+    const url = isAndroid
+      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`
+      : `paytmmp://pay?${upiQuery}`;
+    return {
+      appName: 'Paytm',
+      url,
+      badgeBg: 'bg-[#002970]',
+      badgeText: 'text-white',
+      badgeBorder: 'border-[#00BAF2]/60',
+      brandLabel: 'Paytm'
+    };
+  }
+
+  // 4. Other VPA domains -> Universal NPCI UPI scheme
+  return {
+    appName: 'UPI',
+    url: `upi://pay?${upiQuery}`,
+    badgeBg: 'bg-emerald-700',
+    badgeText: 'text-white',
+    badgeBorder: 'border-emerald-400/60',
+    brandLabel: 'UPI App'
+  };
+};
+
+/**
+ * Generates Paytm UPI payment deep link URL targeting Paytm explicitly.
+ */
+export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
+  return getUpiTargetAppInfo(payeeName, amount, upiId).url;
 };
 
 export const generateUpiUrl = generatePaytmUrl;

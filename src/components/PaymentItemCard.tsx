@@ -3,7 +3,7 @@ import { Check, Calendar, SkipForward, Sparkles, Landmark } from 'lucide-react';
 import type { PaymentItem } from '../types';
 import { usePayments, getEffectiveMethodId } from '../context/PaymentContext';
 import { getCategoryMeta } from '../utils/categories';
-import { formatCurrency, getUrgencyStatus, generateUpiUrl, formatDueDay, formatShortBankName } from '../utils/formatters';
+import { formatCurrency, getUrgencyStatus, getUpiTargetAppInfo, formatDueDay, formatShortBankName } from '../utils/formatters';
 import { trackUpiPaymentLaunch } from './UpiReturnPrompt';
 
 interface PaymentItemCardProps {
@@ -30,14 +30,14 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   const urgency = getUrgencyStatus(payment.dueDay, currentMonthKey, payment.isPaid);
   const categoryBudget = categoryBudgetSummaries.find(s => s.category === payment.category);
   const isCategoryOverBudget = categoryBudget?.status === 'exceeded';
-
+  const upiAppInfo = getUpiTargetAppInfo(payment.name, payment.amount, payment.upiId);
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     togglePaid(payment.id);
   };
 
-  const handlePaytmPayClick = (e: React.MouseEvent) => {
+  const handleUpiPayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     trackUpiPaymentLaunch(payment.id, payment.name, payment.amount);
 
@@ -49,8 +49,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
       }
     }
 
-    const paytmUrl = generateUpiUrl(payment.name, payment.amount, payment.upiId);
-    window.location.href = paytmUrl;
+    window.location.href = upiAppInfo.url;
   };
 
   return (
@@ -85,7 +84,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
           </h4>
         </div>
 
-        {/* Top Right: Amount & Paid Status Badge + Paytm Button Below */}
+        {/* Top Right: Amount & Paid Status Badge + App Button Below */}
         <div className="flex flex-col items-end space-y-1.5 shrink-0">
           <div className="flex items-center space-x-2">
             <span
@@ -114,7 +113,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
             )}
           </div>
 
-          {/* Paytm Brand Button with plain text 'Pay via' before the Paytm box */}
+          {/* Dynamic App Payment Brand Button */}
           {!payment.isPaid && !payment.isSkipped && !payment.isAutopayEnabled && (
             <div className="flex items-center space-x-1.5 pt-0.5">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -122,14 +121,28 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
               </span>
               <button
                 type="button"
-                onClick={handlePaytmPayClick}
-                className="px-3 py-1 rounded-full text-xs font-black bg-[#002970] hover:bg-[#001e4d] text-white border border-[#00BAF2]/60 shadow-md transition-all shrink-0 active:scale-95 flex items-center justify-center"
-                title="Pay directly via Paytm App"
+                onClick={handleUpiPayClick}
+                className={`px-3 py-1 rounded-full text-xs font-black ${upiAppInfo.badgeBg} ${upiAppInfo.badgeText} border ${upiAppInfo.badgeBorder} shadow-md transition-all shrink-0 active:scale-95 flex items-center justify-center`}
+                title={`Pay directly via ${upiAppInfo.brandLabel} App`}
               >
-                <span className="tracking-tight flex items-center">
-                  <span className="text-white font-extrabold">Pay</span>
-                  <span className="text-[#00BAF2] font-black">tm</span>
-                </span>
+                {upiAppInfo.appName === 'Paytm' ? (
+                  <span className="tracking-tight flex items-center">
+                    <span className="text-white font-extrabold">Pay</span>
+                    <span className="text-[#00BAF2] font-black">tm</span>
+                  </span>
+                ) : upiAppInfo.appName === 'PhonePe' ? (
+                  <span className="tracking-tight flex items-center font-black">
+                    PhonePe
+                  </span>
+                ) : upiAppInfo.appName === 'GPay' ? (
+                  <span className="tracking-tight flex items-center font-black">
+                    GPay
+                  </span>
+                ) : (
+                  <span className="tracking-tight flex items-center font-black">
+                    UPI App
+                  </span>
+                )}
               </button>
             </div>
           )}
