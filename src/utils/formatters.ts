@@ -137,8 +137,59 @@ export const getCleanPhoneNumber = (input?: string): string | null => {
   return null;
 };
 
+export type SupportedUpiApp = 'Paytm' | 'PhonePe' | 'GPay' | 'UPI';
+
+/**
+ * Generates platform-compatible UPI payment URL for both iOS (iPhone) and Android.
+ * Directs to the selected target app (Paytm, PhonePe, GPay, or Universal UPI chooser).
+ */
+export const getUpiAppUrl = (
+  app: SupportedUpiApp,
+  payeeName: string,
+  amount: number,
+  upiId?: string
+): string => {
+  const nameEncoded = encodeURIComponent(payeeName.trim());
+  const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
+
+  if (!upiId || !upiId.trim()) {
+    if (app === 'Paytm') return isAndroid ? `intent://pay#Intent;scheme=upi;package=net.one97.paytm;end` : `paytmmp://pay`;
+    if (app === 'PhonePe') return isAndroid ? `intent://pay#Intent;scheme=upi;package=com.phonepe.app;end` : `phonepe://pay`;
+    if (app === 'GPay') return isAndroid ? `intent://pay#Intent;scheme=upi;package=com.google.android.apps.n26;end` : `gpay://upi/pay`;
+    return `upi://pay`;
+  }
+
+  const phone = getCleanPhoneNumber(upiId);
+  const vpa = phone ? `${phone}@paytm` : upiId.trim();
+  const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+
+  if (app === 'Paytm') {
+    if (isAndroid) {
+      return `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`;
+    }
+    const isPaytmHandle = vpa.toLowerCase().endsWith('@paytm') || !!phone;
+    return isPaytmHandle ? `paytmmp://pay?${upiQuery}` : `upi://pay?${upiQuery}`;
+  }
+
+  if (app === 'PhonePe') {
+    if (isAndroid) {
+      return `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`;
+    }
+    return `phonepe://pay?${upiQuery}`;
+  }
+
+  if (app === 'GPay') {
+    if (isAndroid) {
+      return `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.google.android.apps.n26;end`;
+    }
+    return `gpay://upi/pay?${upiQuery}`;
+  }
+
+  return `upi://pay?${upiQuery}`;
+};
+
 export interface UpiTargetAppInfo {
-  appName: 'PhonePe' | 'GPay' | 'Paytm' | 'UPI';
+  appName: SupportedUpiApp;
   url: string;
   badgeBg: string;
   badgeText: string;
@@ -146,19 +197,11 @@ export interface UpiTargetAppInfo {
   brandLabel: string;
 }
 
-/**
- * Automatically inspects the UPI ID handle and returns the exact matching app deep link URL
- * (PhonePe for @ybl, GPay for @oksbi, Paytm for @paytm/mobile, universal UPI for others).
- * Prevents Paytm's internal "Invalid UPI ID" error caused by deep linking non-Paytm handles into Paytm.
- */
 export const getUpiTargetAppInfo = (payeeName: string, amount: number, upiId?: string): UpiTargetAppInfo => {
-  const nameEncoded = encodeURIComponent(payeeName.trim());
-  const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
-
   if (!upiId || !upiId.trim()) {
     return {
       appName: 'Paytm',
-      url: isAndroid ? `intent://pay#Intent;scheme=upi;package=net.one97.paytm;end` : `paytmmp://pay`,
+      url: getUpiAppUrl('Paytm', payeeName, amount, upiId),
       badgeBg: 'bg-[#002970]',
       badgeText: 'text-white',
       badgeBorder: 'border-[#00BAF2]/60',
@@ -169,16 +212,11 @@ export const getUpiTargetAppInfo = (payeeName: string, amount: number, upiId?: s
   const phone = getCleanPhoneNumber(upiId);
   const vpa = phone ? `${phone}@paytm` : upiId.trim();
   const lowerVpa = vpa.toLowerCase();
-  const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
-  // 1. PhonePe VPAs (@ybl, @ibl, @axl) -> Direct to PhonePe
   if (lowerVpa.endsWith('@ybl') || lowerVpa.endsWith('@ibl') || lowerVpa.endsWith('@axl')) {
-    const url = isAndroid
-      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`
-      : `phonepe://pay?${upiQuery}`;
     return {
       appName: 'PhonePe',
-      url,
+      url: getUpiAppUrl('PhonePe', payeeName, amount, upiId),
       badgeBg: 'bg-[#5f259f]',
       badgeText: 'text-white',
       badgeBorder: 'border-purple-400/60',
@@ -186,14 +224,10 @@ export const getUpiTargetAppInfo = (payeeName: string, amount: number, upiId?: s
     };
   }
 
-  // 2. Google Pay VPAs (@oksbi, @okaxis, @okicici, @okhdfcbank) -> Direct to GPay
   if (lowerVpa.includes('@ok')) {
-    const url = isAndroid
-      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.google.android.apps.n26;end`
-      : `gpay://upi/pay?${upiQuery}`;
     return {
       appName: 'GPay',
-      url,
+      url: getUpiAppUrl('GPay', payeeName, amount, upiId),
       badgeBg: 'bg-slate-900 dark:bg-slate-800',
       badgeText: 'text-white',
       badgeBorder: 'border-blue-400/60',
@@ -201,51 +235,24 @@ export const getUpiTargetAppInfo = (payeeName: string, amount: number, upiId?: s
     };
   }
 
-  // 3. Paytm VPAs (@paytm, @ptsbi) or 10-digit phone number -> Direct to Paytm
-  if (lowerVpa.endsWith('@paytm') || lowerVpa.includes('@pt') || phone) {
-    const url = isAndroid
-      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`
-      : `paytmmp://pay?${upiQuery}`;
-    return {
-      appName: 'Paytm',
-      url,
-      badgeBg: 'bg-[#002970]',
-      badgeText: 'text-white',
-      badgeBorder: 'border-[#00BAF2]/60',
-      brandLabel: 'Paytm'
-    };
-  }
-
-  // 4. Other VPA domains -> Universal NPCI UPI scheme
   return {
-    appName: 'UPI',
-    url: `upi://pay?${upiQuery}`,
-    badgeBg: 'bg-emerald-700',
+    appName: 'Paytm',
+    url: getUpiAppUrl('Paytm', payeeName, amount, upiId),
+    badgeBg: 'bg-[#002970]',
     badgeText: 'text-white',
-    badgeBorder: 'border-emerald-400/60',
-    brandLabel: 'UPI App'
+    badgeBorder: 'border-[#00BAF2]/60',
+    brandLabel: 'Paytm'
   };
 };
 
-/**
- * Generates Paytm UPI payment deep link URL targeting Paytm explicitly.
- */
 export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  return getUpiTargetAppInfo(payeeName, amount, upiId).url;
+  return getUpiAppUrl('Paytm', payeeName, amount, upiId);
 };
 
 export const generateUpiUrl = generatePaytmUrl;
 
 export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  const nameEncoded = encodeURIComponent(payeeName.trim());
-  if (!upiId || !upiId.trim()) {
-    return `upi://pay`;
-  }
-
-  const phone = getCleanPhoneNumber(upiId);
-  const vpa = phone ? `${phone}@paytm` : upiId.trim();
-
-  return `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  return getUpiAppUrl('UPI', payeeName, amount, upiId);
 };
 
 /**
