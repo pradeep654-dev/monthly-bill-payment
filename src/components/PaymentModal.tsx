@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Trash2, Contact } from 'lucide-react';
 import type { PaymentItem, CategoryType } from '../types';
 import { CATEGORY_MAP } from '../utils/categories';
@@ -15,7 +15,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   editingPayment
 }) => {
-  const { addPayment, updatePayment, deletePayment, paymentMethods } = usePayments();
+  const { addPayment, updatePayment, deletePayment, paymentMethods, payments } = usePayments();
 
   const [commitmentType, setCommitmentType] = useState<'savings' | 'commitment'>('commitment');
   const [name, setName] = useState('');
@@ -29,6 +29,23 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [isMandatory, setIsMandatory] = useState(true);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
+  const [contactHint, setContactHint] = useState('');
+
+  // Extract unique saved payees / contacts from payments history
+  const savedPayees = useMemo(() => {
+    const payees: { name: string; upiId: string }[] = [];
+    const seen = new Set<string>();
+    payments.forEach(p => {
+      if (p.upiId && p.upiId.trim()) {
+        const key = p.upiId.trim().toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          payees.push({ name: p.name, upiId: p.upiId.trim() });
+        }
+      }
+    });
+    return payees;
+  }, [payments]);
 
   const handlePickContact = async () => {
     if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
@@ -45,13 +62,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           if (contact.name && contact.name.length > 0 && !name.trim()) {
             setName(contact.name[0]);
           }
+          return;
         }
       } catch (err) {
         console.warn('Contact picker cancelled or unhandled', err);
       }
-    } else {
-      alert('Contact Picker is supported on mobile devices (Android / iOS / Chrome). You can also type any 10-digit mobile number or UPI ID directly!');
     }
+
+    // Universal fallback: Focus input smoothly and display hint/recent payees without browser alert()
+    const inputEl = document.getElementById('upi-phone-input');
+    if (inputEl) inputEl.focus();
+
+    setContactHint('Type a 10-digit mobile number (e.g. 9876543210) or UPI ID');
+    setTimeout(() => setContactHint(''), 4000);
   };
 
   useEffect(() => {
@@ -303,7 +326,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   type="button"
                   onClick={handlePickContact}
                   className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
-                  title="Pick contact from phone address book"
+                  title="Pick contact from phone address book or saved payees"
                 >
                   <Contact className="w-3 h-3 stroke-[2.5]" />
                   <span>Pick Contact</span>
@@ -311,15 +334,43 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
 
               <input
+                id="upi-phone-input"
                 type="text"
                 placeholder="e.g. 9876543210 or payee@paytm"
                 value={upiId}
                 onChange={e => setUpiId(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-medium"
+                className="w-full px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-blue-500/40"
               />
-              <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
-                Pick from contacts or enter 10-digit number / UPI ID for 1-tap Paytm pay
-              </span>
+
+              {/* Saved Payees Quick Selection Chips */}
+              {savedPayees.length > 0 && (
+                <div className="mt-1.5 flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 shrink-0">Recent:</span>
+                  {savedPayees.map((payee, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setUpiId(payee.upiId);
+                        if (!name.trim()) setName(payee.name);
+                      }}
+                      className="px-2 py-0.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-400/30 truncate shrink-0 active:scale-95 transition-all"
+                    >
+                      {payee.name}: {payee.upiId}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {contactHint ? (
+                <span className="block text-[10px] text-amber-600 dark:text-amber-400 mt-1 font-bold animate-pulse">
+                  💡 {contactHint}
+                </span>
+              ) : (
+                <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                  Pick from contacts or enter 10-digit number / UPI ID for 1-tap Paytm pay
+                </span>
+              )}
             </div>
           </div>
 
