@@ -371,6 +371,34 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 className="w-full px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-blue-500/40"
               />
 
+              {/* UPI Handle Quick Converter Chips for 10-digit mobile numbers */}
+              {/^[6-9]\d{9}$/.test(upiId.trim().replace(/\D/g, '')) && !upiId.includes('@') && (
+                <div className="mt-1.5 flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 shrink-0">Specific VPA:</span>
+                  <button
+                    type="button"
+                    onClick={() => setUpiId(prev => `${prev.trim().replace(/\D/g, '')}@ybl`)}
+                    className="px-2 py-0.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-400/30 shrink-0 active:scale-95"
+                  >
+                    + @ybl (PhonePe)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUpiId(prev => `${prev.trim().replace(/\D/g, '')}@oksbi`)}
+                    className="px-2 py-0.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-700 dark:text-teal-300 text-[10px] font-bold border border-teal-400/30 shrink-0 active:scale-95"
+                  >
+                    + @oksbi (GPay)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUpiId(prev => `${prev.trim().replace(/\D/g, '')}@paytm`)}
+                    className="px-2 py-0.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-400/30 shrink-0 active:scale-95"
+                  >
+                    + @paytm (Paytm)
+                  </button>
+                </div>
+              )}
+
               {/* Saved Payees Quick Selection Chips */}
               {savedPayees.length > 0 && (
                 <div className="mt-1.5 flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
