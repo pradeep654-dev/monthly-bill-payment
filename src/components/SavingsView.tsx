@@ -1,6 +1,6 @@
 import React from 'react';
 import { PiggyBank, Plus } from 'lucide-react';
-import { usePayments } from '../context/PaymentContext';
+import { usePayments, getEffectiveMethodId } from '../context/PaymentContext';
 import { PaymentItemCard } from './PaymentItemCard';
 import type { PaymentItem } from '../types';
 import { formatCurrency, sortByUpcomingAndDate } from '../utils/formatters';
@@ -33,7 +33,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   // Breakdown by linked payment account
   const accountBreakdown = paymentMethods.map(m => {
     const allocated = savingsItems
-      .filter(p => p.paymentMethodId === m.id)
+      .filter(p => getEffectiveMethodId(p, paymentMethods) === m.id)
       .reduce((sum, p) => sum + p.amount, 0);
     return { ...m, allocated };
   }).filter(m => m.allocated > 0);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, Calendar, SkipForward, Sparkles, Landmark } from 'lucide-react';
 import type { PaymentItem } from '../types';
-import { usePayments } from '../context/PaymentContext';
+import { usePayments, getEffectiveMethodId } from '../context/PaymentContext';
 import { getCategoryMeta } from '../utils/categories';
 import { formatCurrency, getUrgencyStatus, generateUpiUrl, formatDueDay, formatShortBankName } from '../utils/formatters';
 
@@ -19,7 +19,8 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   const categoryMeta = getCategoryMeta(payment.category);
   const IconComponent = categoryMeta.icon;
 
-  const linkedAccount = paymentMethods.find(m => m.id === payment.paymentMethodId);
+  const effectiveMethodId = getEffectiveMethodId(payment, paymentMethods);
+  const linkedAccount = paymentMethods.find(m => m.id === effectiveMethodId);
   const fullBankName = linkedAccount
     ? linkedAccount.name
     : (payment.commitmentType === 'savings' || categoryMeta.group === 'savings' ? 'SBI Bank' : 'HDFC Bank');

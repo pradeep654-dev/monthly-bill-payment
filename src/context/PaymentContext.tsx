@@ -86,6 +86,37 @@ const STORAGE_KEY_SYNC_CODE = 'paytracker_sync_code_v1';
 const STORAGE_KEY_BUDGETS = 'paytracker_budgets_v1';
 
 
+// Helper function to resolve effective payment method ID for any payment item
+export const getEffectiveMethodId = (
+  payment: { paymentMethodId?: string; commitmentType?: string; category?: CategoryType },
+  methods: PaymentMethod[]
+): string => {
+  if (payment.paymentMethodId && methods.some(m => m.id === payment.paymentMethodId)) {
+    return payment.paymentMethodId;
+  }
+  // Mapped legacy or alias IDs (e.g. gpay/phonepe -> Paytm UPI)
+  if (payment.paymentMethodId === 'pm-2' || (payment.paymentMethodId && payment.paymentMethodId.toLowerCase().includes('paytm'))) {
+    const paytm = methods.find(m => m.id === 'pm-2' || m.name.toLowerCase().includes('paytm'));
+    if (paytm) return paytm.id;
+  }
+
+  const isSavings = payment.commitmentType === 'savings' || (payment.category && CATEGORY_MAP[payment.category]?.group === 'savings');
+  if (isSavings) {
+    const sbi = methods.find(m => m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi'));
+    if (sbi) return sbi.id;
+  } else {
+    const isUpiCategory = payment.category && ['utilities', 'internet', 'shopping', 'food', 'travel'].includes(payment.category);
+    if (isUpiCategory) {
+      const upi = methods.find(m => m.id === 'pm-2' || m.name.toLowerCase().includes('paytm') || m.type === 'wallet');
+      if (upi) return upi.id;
+    }
+    const hdfc = methods.find(m => m.id === 'pm-1' || m.name.toLowerCase().includes('hdfc'));
+    if (hdfc) return hdfc.id;
+  }
+
+  return methods[0]?.id || 'pm-1';
+};
+
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
 
 export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -145,7 +176,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [theme, isLiquidGlass]);
 
-  // Load Payment Methods (Exclusively SBI & HDFC + GPay UPI)
+  // Load Payment Methods (Exclusively SBI & HDFC + Paytm UPI)
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_METHODS);
@@ -155,10 +186,17 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const parsed = rawParsed
           .filter((m: PaymentMethod) => m.id !== 'pm-3' && !m.name.toLowerCase().includes('icici'))
           .map((m: PaymentMethod) => {
-            if (m.name.toLowerCase().includes('gpay') || m.name.toLowerCase().includes('phonepe')) {
-              return { ...m, name: 'Paytm UPI' };
+            let name = m.name;
+            if (name.toLowerCase().includes('gpay') || name.toLowerCase().includes('phonepe')) {
+              name = 'Paytm UPI';
             }
-            return m;
+            const defaultInitial = m.id === 'pm-1' ? 55000 : (m.id === 'pm-2' ? 15000 : 40000);
+            const initialBal = (m.initialBalance !== undefined && m.initialBalance !== null) ? m.initialBalance : defaultInitial;
+            return {
+              ...m,
+              name,
+              initialBalance: initialBal
+            };
           });
         if (parsed.length > 0) return parsed;
       }
@@ -765,13 +803,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const targetShare = isSbi ? sbiShare : hdfcShare;
           const methodId = m.id;
           const totalPaidForMethod = currentMonthPayments
-            .filter(p => p.isPaid && !p.isSkipped && (
-              p.paymentMethodId === methodId ||
-              (!p.paymentMethodId && (
-                (isSbi && (p.commitmentType === 'savings' || CATEGORY_MAP[p.category]?.group === 'savings')) ||
-                (isHdfc && p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
-              ))
-            ))
+            .filter(p => p.isPaid && !p.isSkipped && getEffectiveMethodId(p, methods) === methodId)
             .reduce((sum, p) => sum + p.amount, 0);
 
           return {
@@ -829,16 +861,17 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return paymentMethods.map(method => {
       // Sum of all paid items for this payment method in current month
       const totalPaidForMethod = currentMonthPayments
-        .filter(p => p.isPaid && !p.isSkipped && (
-          p.paymentMethodId === method.id ||
-          (!p.paymentMethodId && (
-            (method.id === 'pm-sbi' && (p.commitmentType === 'savings' || CATEGORY_MAP[p.category]?.group === 'savings')) ||
-            (method.id === 'pm-1' && p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
-          ))
-        ))
+        .filter(p => p.isPaid && !p.isSkipped && getEffectiveMethodId(p, paymentMethods) === method.id)
         .reduce((sum, p) => sum + p.amount, 0);
 
-      const baseInitial = method.initialBalance ?? (method.balance + totalPaidForMethod);
+      let baseInitial = method.initialBalance;
+      if (baseInitial === undefined || baseInitial === null) {
+        if (method.id === 'pm-1') baseInitial = 55000;
+        else if (method.id === 'pm-2') baseInitial = 15000;
+        else if (method.id === 'pm-sbi') baseInitial = 40000;
+        else baseInitial = method.balance + totalPaidForMethod;
+      }
+
       const computedBalance = Math.max(0, baseInitial - totalPaidForMethod);
 
       return {
