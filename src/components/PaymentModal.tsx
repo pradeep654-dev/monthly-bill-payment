@@ -360,10 +360,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               <input
                 id="upi-phone-input"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                name="tel"
+                type="text"
+                inputMode="email"
+                autoCapitalize="none"
+                autoCorrect="off"
                 placeholder="e.g. 9876543210 or payee@paytm"
                 value={upiId}
                 onPaste={handlePasteUpi}
