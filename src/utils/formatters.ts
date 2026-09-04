@@ -123,48 +123,58 @@ export const getUrgencyStatus = (dueDay: number, monthKey: string, isPaid: boole
 };
 
 /**
- * Formats user input as a valid UPI VPA.
- * If input is a 10-digit Indian mobile number (e.g. 9876543210 or +919876543210),
- * automatically formats it as `number@paytm`.
+ * Extracts a clean 10-digit Indian mobile number if valid, otherwise returns null.
  */
-export const formatUpiOrPhoneNumber = (input?: string): string => {
-  if (!input || !input.trim()) return '';
-  const trimmed = input.trim();
-
-  // Check for 10-digit Indian mobile number
-  const digitsOnly = trimmed.replace(/\D/g, '');
+export const getCleanPhoneNumber = (input?: string): string | null => {
+  if (!input || !input.trim()) return null;
+  const digitsOnly = input.trim().replace(/\D/g, '');
   if (/^[6-9]\d{9}$/.test(digitsOnly)) {
-    return `${digitsOnly}@paytm`;
+    return digitsOnly;
   }
   if (digitsOnly.length === 12 && digitsOnly.startsWith('91') && /^[6-9]\d{9}$/.test(digitsOnly.slice(2))) {
-    return `${digitsOnly.slice(2)}@paytm`;
+    return digitsOnly.slice(2);
   }
-
-  return trimmed;
+  return null;
 };
 
 /**
  * Generates Paytm app deep link URL (paytmmp://)
- * - If 10-digit contact number is provided: converts to number@paytm and redirects to payment page
- * - If UPI VPA is provided: redirects directly to payment page for that VPA on Paytm
- * - If no upiId is provided: redirects to Paytm Pay screen
+ * - If 10-digit mobile number: uses `mobile=9876543210` parameter to open Paytm Pay to Mobile screen (no "Invalid UPI ID" error)
+ * - If full UPI VPA (containing '@'): uses `pa=user@vpa` parameter for direct VPA resolution
+ * - If empty: opens Paytm Pay screen
  */
 export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  const resolvedVpa = formatUpiOrPhoneNumber(upiId);
   const nameEncoded = encodeURIComponent(payeeName);
-
-  if (resolvedVpa) {
-    return `paytmmp://pay?pa=${encodeURIComponent(resolvedVpa)}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  if (!upiId || !upiId.trim()) {
+    return `paytmmp://pay`;
   }
-  return `paytmmp://pay`;
+
+  const phone = getCleanPhoneNumber(upiId);
+  if (phone) {
+    // Mobile number deep link for Paytm: uses mobile parameter so Paytm opens Pay to Phone Number screen
+    return `paytmmp://pay?mobile=${phone}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  }
+
+  // Full UPI VPA (e.g. user@oksbi, payee@paytm)
+  const vpa = upiId.trim();
+  return `paytmmp://pay?pa=${encodeURIComponent(vpa)}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 };
 
 export const generateUpiUrl = generatePaytmUrl;
 
 export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  const resolvedVpa = formatUpiOrPhoneNumber(upiId);
   const nameEncoded = encodeURIComponent(payeeName);
-  return resolvedVpa ? `upi://pay?pa=${encodeURIComponent(resolvedVpa)}&pn=${nameEncoded}&am=${amount}&cu=INR` : `upi://pay`;
+  if (!upiId || !upiId.trim()) {
+    return `upi://pay`;
+  }
+
+  const phone = getCleanPhoneNumber(upiId);
+  if (phone) {
+    return `upi://pay?mobile=${phone}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  }
+
+  const vpa = upiId.trim();
+  return `upi://pay?pa=${encodeURIComponent(vpa)}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 };
 
 /**
