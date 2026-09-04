@@ -164,15 +164,24 @@ export const getUpiAppUrl = (
     return `upi://pay`;
   }
 
-  // Pass exact 10-digit mobile number or VPA as entered, without forcing @paytm or @ybl
-  const vpa = upiId.trim();
+  const rawInput = upiId.trim();
+  const phone = getCleanPhoneNumber(rawInput);
+
+  let vpa = rawInput;
+  if (phone) {
+    // For 10-digit mobile numbers, NPCI requires a PSP handle (@paytm, @ybl, @oksbi) matching the target app
+    // to route the transaction cleanly without throwing "Technical Glitch"
+    if (app === 'PhonePe') vpa = `${phone}@ybl`;
+    else if (app === 'GPay') vpa = `${phone}@oksbi`;
+    else vpa = `${phone}@paytm`;
+  }
+
   const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
   if (app === 'Paytm') {
     if (isAndroid) {
       return `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`;
     }
-    // On iPhone (iOS), ALWAYS use paytmmp:// scheme so iOS opens Paytm app directly
     return `paytmmp://pay?${upiQuery}`;
   }
 
