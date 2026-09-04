@@ -40,6 +40,15 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   const handlePaytmPayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     trackUpiPaymentLaunch(payment.id, payment.name, payment.amount);
+
+    if (payment.upiId && payment.upiId.trim()) {
+      try {
+        navigator.clipboard?.writeText(payment.upiId.trim());
+      } catch {
+        // Fallback silently
+      }
+    }
+
     const paytmUrl = generateUpiUrl(payment.name, payment.amount, payment.upiId);
     window.location.href = paytmUrl;
   };

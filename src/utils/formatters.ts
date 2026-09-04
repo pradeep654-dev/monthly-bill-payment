@@ -139,8 +139,8 @@ export const getCleanPhoneNumber = (input?: string): string | null => {
 
 /**
  * Generates Paytm app deep link URL (paytmmp://)
- * - If 10-digit mobile number: uses `mobile=9876543210` parameter to open Paytm Pay to Mobile screen (no "Invalid UPI ID" error)
- * - If full UPI VPA (containing '@'): uses `pa=user@vpa` parameter for direct VPA resolution
+ * - If 10-digit mobile number: formats as `phone@paytm` per NPCI specification
+ * - If full UPI VPA: passes `pa=user@vpa` parameter for direct VPA resolution
  * - If empty: opens Paytm Pay screen
  */
 export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
@@ -150,13 +150,8 @@ export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: stri
   }
 
   const phone = getCleanPhoneNumber(upiId);
-  if (phone) {
-    // Mobile number deep link for Paytm: uses mobile parameter so Paytm opens Pay to Phone Number screen
-    return `paytmmp://pay?mobile=${phone}&pn=${nameEncoded}&am=${amount}&cu=INR`;
-  }
+  const vpa = phone ? `${phone}@paytm` : upiId.trim();
 
-  // Full UPI VPA (e.g. user@oksbi, payee@paytm)
-  const vpa = upiId.trim();
   return `paytmmp://pay?pa=${encodeURIComponent(vpa)}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 };
 
@@ -169,11 +164,8 @@ export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?:
   }
 
   const phone = getCleanPhoneNumber(upiId);
-  if (phone) {
-    return `upi://pay?mobile=${phone}&pn=${nameEncoded}&am=${amount}&cu=INR`;
-  }
+  const vpa = phone ? `${phone}@paytm` : upiId.trim();
 
-  const vpa = upiId.trim();
   return `upi://pay?pa=${encodeURIComponent(vpa)}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 };
 
