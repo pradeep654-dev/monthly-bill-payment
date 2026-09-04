@@ -139,31 +139,31 @@ export const getCleanPhoneNumber = (input?: string): string | null => {
 
 /**
  * Generates Paytm app deep link URL (paytmmp://)
- * - If 10-digit mobile number: uses mobile= number parameter so Paytm opens Pay to Mobile Contact screen (works for all contacts regardless of whether recipient uses PhonePe/GPay/Paytm)
- * - If full UPI VPA (containing '@'): uses pa= parameter for exact VPA resolution
+ * - If 10-digit mobile number: uses mobile= number parameter so Paytm opens Pay to Mobile Contact screen
+ * - If full UPI VPA (containing '@'): uses pa=user@vpa (preserving literal '@') for direct payment page with amount pre-filled
  * - If empty: opens Paytm Pay screen
  */
 export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  const nameEncoded = encodeURIComponent(payeeName);
+  const nameEncoded = encodeURIComponent(payeeName.trim());
   if (!upiId || !upiId.trim()) {
     return `paytmmp://pay`;
   }
 
   const phone = getCleanPhoneNumber(upiId);
   if (phone) {
-    // Pass raw mobile number without forcing @paytm (works even if payee uses PhonePe / GPay)
     return `paytmmp://pay?mobile=${phone}&pn=${nameEncoded}&am=${amount}&cu=INR`;
   }
 
   // Full UPI VPA with explicit handle (e.g. user@ybl, user@oksbi, payee@paytm)
+  // Note: NPCI and Paytm deep link parsers require literal '@' in pa= query parameter
   const vpa = upiId.trim();
-  return `paytmmp://pay?pa=${encodeURIComponent(vpa)}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  return `paytmmp://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 };
 
 export const generateUpiUrl = generatePaytmUrl;
 
 export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  const nameEncoded = encodeURIComponent(payeeName);
+  const nameEncoded = encodeURIComponent(payeeName.trim());
   if (!upiId || !upiId.trim()) {
     return `upi://pay`;
   }
@@ -174,7 +174,7 @@ export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?:
   }
 
   const vpa = upiId.trim();
-  return `upi://pay?pa=${encodeURIComponent(vpa)}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  return `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 };
 
 /**
