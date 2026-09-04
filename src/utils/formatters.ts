@@ -138,19 +138,29 @@ export const getCleanPhoneNumber = (input?: string): string | null => {
 };
 
 /**
- * Generates official NPCI & Paytm UPI payment deep link URL (upi://)
- * Opens direct UPI Payment page for VPA / Phone with payee name and amount pre-filled.
+ * Generates Paytm UPI payment deep link URL targeting Paytm explicitly.
+ * Uses Android intent URL targeting net.one97.paytm package and iOS paytmmp:// scheme
+ * so Paytm opens directly without launching WhatsApp or showing generic app choosers.
  */
 export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
   const nameEncoded = encodeURIComponent(payeeName.trim());
+  const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
+
   if (!upiId || !upiId.trim()) {
-    return `upi://pay`;
+    return isAndroid
+      ? `intent://pay#Intent;scheme=upi;package=net.one97.paytm;end`
+      : `paytmmp://pay`;
   }
 
   const phone = getCleanPhoneNumber(upiId);
   const vpa = phone ? `${phone}@paytm` : upiId.trim();
+  const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
-  return `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  if (isAndroid) {
+    return `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`;
+  }
+
+  return `paytmmp://pay?${upiQuery}`;
 };
 
 export const generateUpiUrl = generatePaytmUrl;
