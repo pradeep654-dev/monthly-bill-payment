@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Trash2, Contact } from 'lucide-react';
+import { X, Trash2, Contact, Clipboard, UserCheck, Phone } from 'lucide-react';
 import type { PaymentItem, CategoryType } from '../types';
 import { CATEGORY_MAP } from '../utils/categories';
 import { usePayments } from '../context/PaymentContext';
@@ -30,14 +30,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [contactHint, setContactHint] = useState('');
+  const [isContactSheetOpen, setIsContactSheetOpen] = useState(false);
 
   // Extract unique saved payees / contacts from payments history
   const savedPayees = useMemo(() => {
-    const payees: { name: string; upiId: string }[] = [];
+    const payees: Array<{ name: string; upiId: string }> = [];
     const seen = new Set<string>();
     payments.forEach(p => {
       if (p.upiId && p.upiId.trim()) {
-        const key = p.upiId.trim().toLowerCase();
+        const key = `${p.name}-${p.upiId.trim()}`;
         if (!seen.has(key)) {
           seen.add(key);
           payees.push({ name: p.name, upiId: p.upiId.trim() });
@@ -84,6 +85,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           if (contact.name && contact.name.length > 0 && !name.trim()) {
             setName(contact.name[0]);
           }
+          setContactHint('✓ Contact loaded natively!');
+          setTimeout(() => setContactHint(''), 4000);
           return;
         }
       } catch (err) {
@@ -91,15 +94,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       }
     }
 
-    // iPhone / iOS Safari & Universal PWA fallback:
-    // Focus the input field (triggers iOS keyboard with "Contacts" autofill bar above keyboard)
-    const inputEl = document.getElementById('upi-phone-input');
-    if (inputEl) {
-      inputEl.focus();
-    }
-
-    setContactHint('📱 Tap "Contacts" above your iPhone keyboard, or paste any 10-digit number!');
-    setTimeout(() => setContactHint(''), 6000);
+    // iPhone iOS & Universal Contact Sheet
+    setIsContactSheetOpen(true);
   };
 
   useEffect(() => {
@@ -360,8 +356,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               <input
                 id="upi-phone-input"
-                type="text"
-                inputMode="email"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 autoCapitalize="none"
                 autoCorrect="off"
                 placeholder="e.g. 9876543210 or payee@paytm"
@@ -600,6 +597,128 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           </div>
         </form>
       </div>
+
+      {/* Contact Picker Sheet Modal for iPhone / iOS & Universal */}
+      {isContactSheetOpen && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center space-x-2">
+                <Contact className="w-5 h-5 text-blue-600 dark:text-blue-400 stroke-[2.5]" />
+                <h4 className="font-extrabold text-slate-900 dark:text-white text-base">
+                  Pick Contact / Payee
+                </h4>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsContactSheetOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* iPhone Address Book Guide & Focus Button */}
+            <div className="p-3.5 rounded-2xl bg-blue-500/10 dark:bg-blue-950/40 border border-blue-400/30 space-y-2">
+              <div className="flex items-start space-x-2.5">
+                <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 stroke-[2.2] mt-0.5" />
+                <div>
+                  <span className="block text-xs font-black text-blue-900 dark:text-blue-200">
+                    📱 Pick from iPhone Contacts
+                  </span>
+                  <span className="block text-[11px] font-medium text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
+                    Tap below to open your iPhone keyboard with the <strong>"Contacts"</strong> AutoFill bar right above the keys!
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsContactSheetOpen(false);
+                  const inputEl = document.getElementById('upi-phone-input');
+                  if (inputEl) {
+                    inputEl.focus();
+                  }
+                  setContactHint('📱 Tap "Contacts" on your iPhone keyboard bar!');
+                  setTimeout(() => setContactHint(''), 6000);
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs shadow-md transition-all text-center active:scale-95"
+              >
+                Open iPhone Address Book Keyboard
+              </button>
+            </div>
+
+            {/* Paste from Clipboard Button */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  if (text) {
+                    const digitsOnly = text.replace(/\D/g, '');
+                    if (/^[6-9]\d{9}$/.test(digitsOnly)) {
+                      setUpiId(digitsOnly);
+                    } else {
+                      setUpiId(text.trim());
+                    }
+                    setContactHint('✓ Loaded from Clipboard!');
+                    setTimeout(() => setContactHint(''), 4000);
+                  }
+                } catch {
+                  setContactHint('⚠️ Long press input to paste from Clipboard!');
+                  setTimeout(() => setContactHint(''), 4000);
+                }
+                setIsContactSheetOpen(false);
+              }}
+              className="w-full p-3 rounded-2xl bg-slate-100 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs flex items-center justify-between hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-95"
+            >
+              <div className="flex items-center space-x-2">
+                <Clipboard className="w-4 h-4 text-emerald-500 stroke-[2.5]" />
+                <span>Paste from Clipboard</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-normal">Auto-detect number</span>
+            </button>
+
+            {/* Saved Payees & Frequent Contacts */}
+            {savedPayees.length > 0 && (
+              <div className="space-y-2 pt-1">
+                <span className="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  Saved Payees ({savedPayees.length})
+                </span>
+
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {savedPayees.map((payee, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setUpiId(payee.upiId);
+                        if (!name.trim()) setName(payee.name);
+                        setIsContactSheetOpen(false);
+                        setContactHint(`✓ Selected ${payee.name}!`);
+                        setTimeout(() => setContactHint(''), 4000);
+                      }}
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-left flex items-center justify-between transition-all active:scale-95"
+                    >
+                      <div>
+                        <span className="block text-xs font-bold text-slate-900 dark:text-white">
+                          {payee.name}
+                        </span>
+                        <span className="block text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                          {payee.upiId}
+                        </span>
+                      </div>
+                      <UserCheck className="w-4 h-4 text-blue-500 stroke-[2.2] shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
