@@ -138,26 +138,19 @@ export const getCleanPhoneNumber = (input?: string): string | null => {
 };
 
 /**
- * Generates Paytm app deep link URL (paytmmp://)
- * - If 10-digit mobile number: uses mobile= number parameter so Paytm opens Pay to Mobile Contact screen
- * - If full UPI VPA (containing '@'): uses pa=user@vpa (preserving literal '@') for direct payment page with amount pre-filled
- * - If empty: opens Paytm Pay screen
+ * Generates official NPCI & Paytm UPI payment deep link URL (upi://)
+ * Opens direct UPI Payment page for VPA / Phone with payee name and amount pre-filled.
  */
 export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
   const nameEncoded = encodeURIComponent(payeeName.trim());
   if (!upiId || !upiId.trim()) {
-    return `paytmmp://pay`;
+    return `upi://pay`;
   }
 
   const phone = getCleanPhoneNumber(upiId);
-  if (phone) {
-    return `paytmmp://pay?mobile=${phone}&pn=${nameEncoded}&am=${amount}&cu=INR`;
-  }
+  const vpa = phone ? `${phone}@paytm` : upiId.trim();
 
-  // Full UPI VPA with explicit handle (e.g. user@ybl, user@oksbi, payee@paytm)
-  // Note: NPCI and Paytm deep link parsers require literal '@' in pa= query parameter
-  const vpa = upiId.trim();
-  return `paytmmp://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  return `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 };
 
 export const generateUpiUrl = generatePaytmUrl;
@@ -169,11 +162,8 @@ export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?:
   }
 
   const phone = getCleanPhoneNumber(upiId);
-  if (phone) {
-    return `upi://pay?pa=${phone}&pn=${nameEncoded}&am=${amount}&cu=INR`;
-  }
+  const vpa = phone ? `${phone}@paytm` : upiId.trim();
 
-  const vpa = upiId.trim();
   return `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 };
 
