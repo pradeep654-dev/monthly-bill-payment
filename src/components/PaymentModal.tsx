@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, Contact } from 'lucide-react';
 import type { PaymentItem, CategoryType } from '../types';
 import { CATEGORY_MAP } from '../utils/categories';
 import { usePayments } from '../context/PaymentContext';
@@ -29,6 +29,30 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [isMandatory, setIsMandatory] = useState(true);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
+
+  const handlePickContact = async () => {
+    if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
+      try {
+        const props = ['name', 'tel'];
+        const contacts = await (navigator as any).contacts.select(props, { multiple: false });
+        if (contacts && contacts.length > 0) {
+          const contact = contacts[0];
+          if (contact.tel && contact.tel.length > 0) {
+            const rawPhone = contact.tel[0];
+            const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
+            setUpiId(cleanPhone);
+          }
+          if (contact.name && contact.name.length > 0 && !name.trim()) {
+            setName(contact.name[0]);
+          }
+        }
+      } catch (err) {
+        console.warn('Contact picker cancelled or unhandled', err);
+      }
+    } else {
+      alert('Contact Picker is supported on mobile devices (Android / iOS / Chrome). You can also type any 10-digit mobile number or UPI ID directly!');
+    }
+  };
 
   useEffect(() => {
     if (editingPayment) {
@@ -270,9 +294,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                UPI ID or Phone Number
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  UPI ID or Phone Number
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handlePickContact}
+                  className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
+                  title="Pick contact from phone address book"
+                >
+                  <Contact className="w-3 h-3 stroke-[2.5]" />
+                  <span>Pick Contact</span>
+                </button>
+              </div>
+
               <input
                 type="text"
                 placeholder="e.g. 9876543210 or payee@paytm"
@@ -281,7 +318,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 className="w-full px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-medium"
               />
               <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
-                Enter 10-digit mobile number or UPI ID for direct 1-tap Paytm redirect
+                Pick from contacts or enter 10-digit number / UPI ID for 1-tap Paytm pay
               </span>
             </div>
           </div>
