@@ -167,37 +167,47 @@ export const getUpiAppUrl = (
   const rawInput = upiId.trim();
   const phone = getCleanPhoneNumber(rawInput);
 
-  let vpa = rawInput;
-  let mobileParam = '';
+  let finalUrl = '';
 
   if (phone) {
-    // 10-digit mobile number:
-    // Format VPA with target app's PSP handle and add mobile= parameter
-    // so Paytm, PhonePe & GPay parsers validate VPA syntax cleanly without "Invalid UPI ID" error
-    mobileParam = `&mobile=${phone}`;
-    if (app === 'PhonePe') vpa = `${phone}@ybl`;
-    else if (app === 'GPay') vpa = `${phone}@oksbi`;
-    else vpa = `${phone}@paytm`;
+    // 10-digit mobile number contact payment:
+    // Uses Paytm's paytmmp://pay_to_mobile scheme so Paytm resolves the 10-digit number against Paytm contact book!
+    if (app === 'Paytm') {
+      finalUrl = isAndroid
+        ? `intent://pay?mobile=${phone}&pa=${phone}@paytm&pn=${nameEncoded}&am=${amount}&cu=INR#Intent;scheme=upi;package=net.one97.paytm;end`
+        : `paytmmp://pay_to_mobile?mobile=${phone}&am=${amount}&pn=${nameEncoded}`;
+    } else if (app === 'PhonePe') {
+      finalUrl = isAndroid
+        ? `intent://pay?pa=${phone}@ybl&pn=${nameEncoded}&am=${amount}&cu=INR#Intent;scheme=upi;package=com.phonepe.app;end`
+        : `phonepe://pay?pa=${phone}@ybl&pn=${nameEncoded}&am=${amount}&cu=INR`;
+    } else if (app === 'GPay') {
+      finalUrl = isAndroid
+        ? `intent://pay?pa=${phone}@oksbi&pn=${nameEncoded}&am=${amount}&cu=INR#Intent;scheme=upi;package=com.google.android.apps.n26;end`
+        : `gpay://upi/pay?pa=${phone}@oksbi&pn=${nameEncoded}&am=${amount}&cu=INR`;
+    } else {
+      finalUrl = `upi://pay?pa=${phone}@paytm&pn=${nameEncoded}&am=${amount}&cu=INR`;
+    }
+  } else {
+    // Full VPA ID with @ handle (e.g. 7978003934@ybl, payee@icici)
+    const upiQuery = `pa=${rawInput}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+    if (app === 'Paytm') {
+      finalUrl = isAndroid
+        ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`
+        : `paytmmp://pay?${upiQuery}`;
+    } else if (app === 'PhonePe') {
+      finalUrl = isAndroid
+        ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`
+        : `phonepe://pay?${upiQuery}`;
+    } else if (app === 'GPay') {
+      finalUrl = isAndroid
+        ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.google.android.apps.n26;end`
+        : `gpay://upi/pay?${upiQuery}`;
+    } else {
+      finalUrl = `upi://pay?${upiQuery}`;
+    }
   }
 
-  const upiQuery = `pa=${vpa}${mobileParam}&pn=${nameEncoded}&am=${amount}&cu=INR`;
-
-  let finalUrl = `upi://pay?${upiQuery}`;
-  if (app === 'Paytm') {
-    finalUrl = isAndroid
-      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`
-      : `paytmmp://pay?${upiQuery}`;
-  } else if (app === 'PhonePe') {
-    finalUrl = isAndroid
-      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`
-      : `phonepe://pay?${upiQuery}`;
-  } else if (app === 'GPay') {
-    finalUrl = isAndroid
-      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.google.android.apps.n26;end`
-      : `gpay://upi/pay?${upiQuery}`;
-  }
-
-  console.log(`🔍 [UPI DeepLink Generator] Raw Input: "${upiId}" | Target App: "${app}" | Resolved VPA: "${vpa}" | DeepLink: "${finalUrl}"`);
+  console.log(`🔍 [UPI DeepLink Generator] Raw Input: "${upiId}" | Target App: "${app}" | DeepLink: "${finalUrl}"`);
   return finalUrl;
 };
 
