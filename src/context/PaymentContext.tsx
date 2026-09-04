@@ -150,9 +150,16 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const saved = localStorage.getItem(STORAGE_KEY_METHODS);
       if (saved) {
-        let parsed: PaymentMethod[] = JSON.parse(saved);
-        // Filter out ICICI account completely
-        parsed = parsed.filter(m => m.id !== 'pm-3' && !m.name.toLowerCase().includes('icici'));
+        const rawParsed: PaymentMethod[] = JSON.parse(saved);
+        // Filter out ICICI account completely and update GPay/PhonePe to Paytm UPI
+        const parsed = rawParsed
+          .filter((m: PaymentMethod) => m.id !== 'pm-3' && !m.name.toLowerCase().includes('icici'))
+          .map((m: PaymentMethod) => {
+            if (m.name.toLowerCase().includes('gpay') || m.name.toLowerCase().includes('phonepe')) {
+              return { ...m, name: 'Paytm UPI' };
+            }
+            return m;
+          });
         if (parsed.length > 0) return parsed;
       }
     } catch (e) {
@@ -424,22 +431,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       prev.map(item => {
         if (item.id === id) {
           const nextIsPaid = !item.isPaid;
-
-          // Adjust payment method balance
-          if (item.paymentMethodId) {
-            setPaymentMethods(methods =>
-              methods.map(method => {
-                if (method.id === item.paymentMethodId) {
-                  const newBalance = nextIsPaid
-                    ? method.balance - item.amount // Paid: Decrease balance
-                    : method.balance + item.amount; // Unpaid: Restore balance
-                  return { ...method, balance: Math.max(0, newBalance) };
-                }
-                return method;
-              })
-            );
-          }
-
           return {
             ...item,
             isPaid: nextIsPaid,
@@ -477,7 +468,23 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updatePaymentMethod = (id: string, data: Partial<PaymentMethod>) => {
     setPaymentMethods(prev =>
-      prev.map(m => (m.id === id ? { ...m, ...data } : m))
+      prev.map(m => {
+        if (m.id === id) {
+          if (data.balance !== undefined) {
+            const totalPaidForMethod = currentMonthPayments
+              .filter(p => p.isPaid && !p.isSkipped && (p.paymentMethodId === id || (!p.paymentMethodId && id === 'pm-sbi')))
+              .reduce((sum, p) => sum + p.amount, 0);
+            return {
+              ...m,
+              ...data,
+              initialBalance: data.balance + totalPaidForMethod,
+              balance: data.balance
+            };
+          }
+          return { ...m, ...data };
+        }
+        return m;
+      })
     );
   };
 
@@ -491,9 +498,11 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const resolvedType = data.commitmentType || (CATEGORY_MAP[data.category]?.group === 'savings' ? 'savings' : 'commitment');
     const isSavings = resolvedType === 'savings';
     const isAutoRecurring = isSavings ? true : data.isRecurring;
+    const resolvedMethodId = data.paymentMethodId || (isSavings ? 'pm-sbi' : 'pm-1');
 
     const newItem: PaymentItem = {
       ...data,
+      paymentMethodId: resolvedMethodId,
       commitmentType: resolvedType,
       isRecurring: isAutoRecurring,
       isAutopayEnabled: data.isAutopayEnabled ?? false,
@@ -749,11 +758,27 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const hasHdfc = methods.some(m => m.id === 'pm-1' || m.name.toLowerCase().includes('hdfc'));
 
       return methods.map(m => {
-        if (m.id === 'pm-sbi' || (hasSbi && m.name.toLowerCase().includes('sbi'))) {
-          return { ...m, balance: sbiShare, initialBalance: sbiShare };
-        }
-        if (m.id === 'pm-1' || (hasHdfc && m.name.toLowerCase().includes('hdfc'))) {
-          return { ...m, balance: hdfcShare, initialBalance: hdfcShare };
+        const isSbi = m.id === 'pm-sbi' || (hasSbi && m.name.toLowerCase().includes('sbi'));
+        const isHdfc = m.id === 'pm-1' || (hasHdfc && m.name.toLowerCase().includes('hdfc'));
+
+        if (isSbi || isHdfc) {
+          const targetShare = isSbi ? sbiShare : hdfcShare;
+          const methodId = m.id;
+          const totalPaidForMethod = currentMonthPayments
+            .filter(p => p.isPaid && !p.isSkipped && (
+              p.paymentMethodId === methodId ||
+              (!p.paymentMethodId && (
+                (isSbi && (p.commitmentType === 'savings' || CATEGORY_MAP[p.category]?.group === 'savings')) ||
+                (isHdfc && p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
+              ))
+            ))
+            .reduce((sum, p) => sum + p.amount, 0);
+
+          return {
+            ...m,
+            initialBalance: targetShare + totalPaidForMethod,
+            balance: targetShare
+          };
         }
         return m;
       });
@@ -799,10 +824,35 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  // Dynamically compute live bank balances deducting all paid savings and bills for each account
+  const effectivePaymentMethods: PaymentMethod[] = useMemo(() => {
+    return paymentMethods.map(method => {
+      // Sum of all paid items for this payment method in current month
+      const totalPaidForMethod = currentMonthPayments
+        .filter(p => p.isPaid && !p.isSkipped && (
+          p.paymentMethodId === method.id ||
+          (!p.paymentMethodId && (
+            (method.id === 'pm-sbi' && (p.commitmentType === 'savings' || CATEGORY_MAP[p.category]?.group === 'savings')) ||
+            (method.id === 'pm-1' && p.commitmentType !== 'savings' && CATEGORY_MAP[p.category]?.group !== 'savings')
+          ))
+        ))
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      const baseInitial = method.initialBalance ?? (method.balance + totalPaidForMethod);
+      const computedBalance = Math.max(0, baseInitial - totalPaidForMethod);
+
+      return {
+        ...method,
+        initialBalance: baseInitial,
+        balance: computedBalance
+      };
+    });
+  }, [paymentMethods, currentMonthPayments]);
+
   // Total liquid bank balance across all payment methods
   const totalBankBalance = useMemo(() => {
-    return paymentMethods.reduce((sum, m) => sum + m.balance, 0);
-  }, [paymentMethods]);
+    return effectivePaymentMethods.reduce((sum, m) => sum + m.balance, 0);
+  }, [effectivePaymentMethods]);
 
   // Current month summary metrics
   const summary: MonthSummary = useMemo(() => {
@@ -927,7 +977,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         goToPrevMonth,
         payments,
         currentMonthPayments,
-        paymentMethods,
+        paymentMethods: effectivePaymentMethods,
         summary,
         allMonthSummaries,
         togglePaid,

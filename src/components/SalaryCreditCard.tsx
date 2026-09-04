@@ -54,7 +54,7 @@ export const SalaryCreditCard: React.FC = () => {
               Free Disposable Cash
             </span>
             <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 block mt-0.5 truncate">
-              {formatCurrency(summary.leftoverIncome || 51493)}
+              {formatCurrency(summary.leftoverIncome ?? 0)}
             </span>
           </div>
         </div>

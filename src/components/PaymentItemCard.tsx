@@ -1,9 +1,9 @@
 import React from 'react';
-import { Check, Calendar, SkipForward, Sparkles } from 'lucide-react';
+import { Check, Calendar, SkipForward, Sparkles, Landmark } from 'lucide-react';
 import type { PaymentItem } from '../types';
 import { usePayments } from '../context/PaymentContext';
 import { getCategoryMeta } from '../utils/categories';
-import { formatCurrency, getUrgencyStatus, generateUpiUrl, formatDueDay } from '../utils/formatters';
+import { formatCurrency, getUrgencyStatus, generateUpiUrl, formatDueDay, formatShortBankName } from '../utils/formatters';
 
 interface PaymentItemCardProps {
   payment: PaymentItem;
@@ -20,6 +20,11 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   const IconComponent = categoryMeta.icon;
 
   const linkedAccount = paymentMethods.find(m => m.id === payment.paymentMethodId);
+  const fullBankName = linkedAccount
+    ? linkedAccount.name
+    : (payment.commitmentType === 'savings' || categoryMeta.group === 'savings' ? 'SBI Bank' : 'HDFC Bank');
+  const bankName = formatShortBankName(fullBankName);
+
   const urgency = getUrgencyStatus(payment.dueDay, currentMonthKey, payment.isPaid);
   const categoryBudget = categoryBudgetSummaries.find(s => s.category === payment.category);
   const isCategoryOverBudget = categoryBudget?.status === 'exceeded';
@@ -131,11 +136,17 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
             </span>
           </div>
 
-          {/* Row 2: Category & Metadata Badges */}
+          {/* Row 2: Category, Bank & Metadata Badges */}
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             {/* Category Pill */}
             <span className={`text-xs font-black px-3 py-1 rounded-xl shrink-0 ${categoryMeta.colorClasses}`}>
               {categoryMeta.label}
+            </span>
+
+            {/* Bank / Payment Method Badge */}
+            <span className="text-xs font-black px-3 py-1 rounded-xl shrink-0 bg-blue-500/10 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-400/30 flex items-center space-x-1">
+              <Landmark className="w-3.5 h-3.5 stroke-[2.2] text-blue-600 dark:text-blue-400 shrink-0" />
+              <span>{bankName}</span>
             </span>
 
             {/* Autopay Badge */}
@@ -163,23 +174,25 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
         {/* Right Column: Skip Button & Circular Paid Checkbox */}
         <div className="flex items-center space-x-2.5 shrink-0 pl-2">
 
-          {/* Skip Button (▷ Skip) */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleSkip(payment.id);
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-black border transition-all shrink-0 active:scale-95 flex items-center space-x-1 ${
-              payment.isSkipped
-                ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
-                : 'bg-slate-100 dark:bg-[#1a2333] text-slate-700 dark:text-white border-slate-200 dark:border-[#2a364f] hover:bg-amber-500/10 hover:text-amber-600'
-            }`}
-            title={payment.isSkipped ? 'Resume this item for the month' : 'Skip this item for this month'}
-          >
-            <SkipForward className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>{payment.isSkipped ? 'Skipped' : 'Skip'}</span>
-          </button>
+          {/* Skip Button (▷ Skip) - Only shown when unpaid */}
+          {!payment.isPaid && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSkip(payment.id);
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-black border transition-all shrink-0 active:scale-95 flex items-center space-x-1 ${
+                payment.isSkipped
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                  : 'bg-slate-100 dark:bg-[#1a2333] text-slate-700 dark:text-white border-slate-200 dark:border-[#2a364f] hover:bg-amber-500/10 hover:text-amber-600'
+              }`}
+              title={payment.isSkipped ? 'Resume this item for the month' : 'Skip this item for this month'}
+            >
+              <SkipForward className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>{payment.isSkipped ? 'Skipped' : 'Skip'}</span>
+            </button>
+          )}
 
           {/* Paid Checkbox Button: Solid White Circle with Check Icon */}
           <button

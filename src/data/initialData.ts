@@ -17,12 +17,12 @@ export const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
     name: 'HDFC Bank Account',
     type: 'bank',
     balance: 40000,
-    initialBalance: 40000,
+    initialBalance: 55000,
     color: 'blue'
   },
   {
     id: 'pm-2',
-    name: 'GPay / PhonePe UPI',
+    name: 'Paytm UPI',
     type: 'wallet',
     balance: 11500,
     initialBalance: 15000,

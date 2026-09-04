@@ -3,27 +3,22 @@ import { Briefcase, ChevronDown, ChevronUp } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { formatCurrency } from '../utils/formatters';
 
-const STORAGE_KEY_SALARY = 'paytracker_salary_v1';
-
 export const CommitmentLoadCard: React.FC = () => {
-  const { summary, isLiquidGlass } = usePayments();
-  const [salary, setSalary] = useState<number>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_SALARY);
-    return saved ? parseFloat(saved) : 80000;
-  });
+  const { summary, salarySplitPercent, updateSalarySettings, isLiquidGlass } = usePayments();
+  const salary = summary.monthlyIncome || 80000;
 
   const [isEditing, setIsEditing] = useState(false);
   const [inputVal, setInputVal] = useState(salary.toString());
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_SALARY, salary.toString());
+    setInputVal(salary.toString());
   }, [salary]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(inputVal);
     if (!isNaN(num) && num > 0) {
-      setSalary(num);
+      updateSalarySettings(num, salarySplitPercent || 50);
     }
     setIsEditing(false);
   };

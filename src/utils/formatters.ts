@@ -161,3 +161,19 @@ export const sortByUpcomingAndDate = <T extends { dueDay: number; isPaid: boolea
   });
 };
 
+/**
+ * Returns concise short bank name (e.g. "SBI", "HDFC", "Paytm", "ICICI")
+ */
+export const formatShortBankName = (fullName: string): string => {
+  if (!fullName) return '';
+  const lower = fullName.toLowerCase();
+  if (lower.includes('sbi')) return 'SBI';
+  if (lower.includes('hdfc')) return 'HDFC';
+  if (lower.includes('paytm') || lower.includes('upi') || lower.includes('gpay') || lower.includes('phonepe')) return 'Paytm';
+  if (lower.includes('icici')) return 'ICICI';
+  if (lower.includes('axis')) return 'Axis';
+  if (lower.includes('kotak')) return 'Kotak';
+  return fullName.split(' ')[0];
+};
+
+
