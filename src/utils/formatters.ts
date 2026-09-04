@@ -167,8 +167,8 @@ export const getUpiAppUrl = (
     if (isAndroid) {
       return `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`;
     }
-    const isPaytmHandle = vpa.toLowerCase().endsWith('@paytm') || !!phone;
-    return isPaytmHandle ? `paytmmp://pay?${upiQuery}` : `upi://pay?${upiQuery}`;
+    // On iPhone (iOS), ALWAYS use paytmmp:// scheme so iOS opens Paytm app directly without opening WhatsApp
+    return `paytmmp://pay?${upiQuery}`;
   }
 
   if (app === 'PhonePe') {
