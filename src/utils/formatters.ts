@@ -164,15 +164,15 @@ export const getUpiAppUrl = (
     return `upi://pay`;
   }
 
-  const phone = getCleanPhoneNumber(upiId);
-  const vpa = phone ? `${phone}@paytm` : upiId.trim();
+  // Pass exact 10-digit mobile number or VPA as entered, without forcing @paytm or @ybl
+  const vpa = upiId.trim();
   const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
   if (app === 'Paytm') {
     if (isAndroid) {
       return `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`;
     }
-    // On iPhone (iOS), ALWAYS use paytmmp:// scheme so iOS opens Paytm app directly without opening WhatsApp
+    // On iPhone (iOS), ALWAYS use paytmmp:// scheme so iOS opens Paytm app directly
     return `paytmmp://pay?${upiQuery}`;
   }
 
@@ -214,8 +214,7 @@ export const getUpiTargetAppInfo = (payeeName: string, amount: number, upiId?: s
     };
   }
 
-  const phone = getCleanPhoneNumber(upiId);
-  const vpa = phone ? `${phone}@paytm` : upiId.trim();
+  const vpa = upiId.trim();
   const lowerVpa = vpa.toLowerCase();
 
   if (lowerVpa.endsWith('@ybl') || lowerVpa.endsWith('@ibl') || lowerVpa.endsWith('@axl')) {
