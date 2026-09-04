@@ -4,6 +4,7 @@ import type { PaymentItem } from '../types';
 import { usePayments, getEffectiveMethodId } from '../context/PaymentContext';
 import { getCategoryMeta } from '../utils/categories';
 import { formatCurrency, getUrgencyStatus, generateUpiUrl, formatDueDay, formatShortBankName } from '../utils/formatters';
+import { trackUpiPaymentLaunch } from './UpiReturnPrompt';
 
 interface PaymentItemCardProps {
   payment: PaymentItem;
@@ -38,6 +39,7 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
 
   const handlePaytmPayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    trackUpiPaymentLaunch(payment.id, payment.name, payment.amount);
     const paytmUrl = generateUpiUrl(payment.name, payment.amount, payment.upiId);
     window.location.href = paytmUrl;
   };

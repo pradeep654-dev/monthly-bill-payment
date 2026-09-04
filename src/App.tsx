@@ -18,6 +18,7 @@ import { PaymentModal } from './components/PaymentModal';
 import { BudgetModal } from './components/BudgetModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
 import { PWAUpdatePrompt } from './components/PWAUpdatePrompt';
+import { UpiReturnPrompt } from './components/UpiReturnPrompt';
 import type { PaymentItem } from './types';
 
 const MainContent: React.FC = () => {
@@ -47,6 +48,9 @@ const MainContent: React.FC = () => {
     }`}>
       {/* PWA Update Banner */}
       <PWAUpdatePrompt />
+
+      {/* Auto-Paid UPI Return Confirmation Banner */}
+      <UpiReturnPrompt />
 
       {/* Mobile Shell Container */}
       <div className={`w-full max-w-md mx-auto h-full flex flex-col relative z-10 shadow-2xl overflow-hidden border-x ${

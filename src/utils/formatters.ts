@@ -123,15 +123,38 @@ export const getUrgencyStatus = (dueDay: number, monthKey: string, isPaid: boole
 };
 
 /**
+ * Formats user input as a valid UPI VPA.
+ * If input is a 10-digit Indian mobile number (e.g. 9876543210 or +919876543210),
+ * automatically formats it as `number@paytm`.
+ */
+export const formatUpiOrPhoneNumber = (input?: string): string => {
+  if (!input || !input.trim()) return '';
+  const trimmed = input.trim();
+
+  // Check for 10-digit Indian mobile number
+  const digitsOnly = trimmed.replace(/\D/g, '');
+  if (/^[6-9]\d{9}$/.test(digitsOnly)) {
+    return `${digitsOnly}@paytm`;
+  }
+  if (digitsOnly.length === 12 && digitsOnly.startsWith('91') && /^[6-9]\d{9}$/.test(digitsOnly.slice(2))) {
+    return `${digitsOnly.slice(2)}@paytm`;
+  }
+
+  return trimmed;
+};
+
+/**
  * Generates Paytm app deep link URL (paytmmp://)
- * - If upiId is provided: redirects directly to payment page for that VPA on Paytm
- * - If no upiId is provided: redirects to Paytm Pay / Home screen
+ * - If 10-digit contact number is provided: converts to number@paytm and redirects to payment page
+ * - If UPI VPA is provided: redirects directly to payment page for that VPA on Paytm
+ * - If no upiId is provided: redirects to Paytm Pay screen
  */
 export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  if (upiId && upiId.trim()) {
-    const vpa = upiId.trim();
-    const nameEncoded = encodeURIComponent(payeeName);
-    return `paytmmp://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  const resolvedVpa = formatUpiOrPhoneNumber(upiId);
+  const nameEncoded = encodeURIComponent(payeeName);
+
+  if (resolvedVpa) {
+    return `paytmmp://pay?pa=${encodeURIComponent(resolvedVpa)}&pn=${nameEncoded}&am=${amount}&cu=INR`;
   }
   return `paytmmp://pay`;
 };
@@ -139,9 +162,9 @@ export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: stri
 export const generateUpiUrl = generatePaytmUrl;
 
 export const generateGenericUpiUrl = (payeeName: string, amount: number, upiId?: string): string => {
-  const vpa = upiId ? upiId.trim() : '';
+  const resolvedVpa = formatUpiOrPhoneNumber(upiId);
   const nameEncoded = encodeURIComponent(payeeName);
-  return vpa ? `upi://pay?pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR` : `upi://pay`;
+  return resolvedVpa ? `upi://pay?pa=${encodeURIComponent(resolvedVpa)}&pn=${nameEncoded}&am=${amount}&cu=INR` : `upi://pay`;
 };
 
 /**
