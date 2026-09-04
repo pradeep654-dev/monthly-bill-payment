@@ -178,28 +178,23 @@ export const getUpiAppUrl = (
 
   const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
+  let finalUrl = `upi://pay?${upiQuery}`;
   if (app === 'Paytm') {
-    if (isAndroid) {
-      return `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`;
-    }
-    return `paytmmp://pay?${upiQuery}`;
+    finalUrl = isAndroid
+      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`
+      : `paytmmp://pay?${upiQuery}`;
+  } else if (app === 'PhonePe') {
+    finalUrl = isAndroid
+      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`
+      : `phonepe://pay?${upiQuery}`;
+  } else if (app === 'GPay') {
+    finalUrl = isAndroid
+      ? `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.google.android.apps.n26;end`
+      : `gpay://upi/pay?${upiQuery}`;
   }
 
-  if (app === 'PhonePe') {
-    if (isAndroid) {
-      return `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.phonepe.app;end`;
-    }
-    return `phonepe://pay?${upiQuery}`;
-  }
-
-  if (app === 'GPay') {
-    if (isAndroid) {
-      return `intent://pay?${upiQuery}#Intent;scheme=upi;package=com.google.android.apps.n26;end`;
-    }
-    return `gpay://upi/pay?${upiQuery}`;
-  }
-
-  return `upi://pay?${upiQuery}`;
+  console.log(`🔍 [UPI DeepLink Generator] Raw Input: "${upiId}" | Target App: "${app}" | Resolved VPA: "${vpa}" | DeepLink: "${finalUrl}"`);
+  return finalUrl;
 };
 
 export interface UpiTargetAppInfo {

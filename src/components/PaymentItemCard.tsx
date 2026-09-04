@@ -49,6 +49,8 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
       }
     }
 
+    console.log(`📲 [UPI Launch] Item: "${payment.name}" | Amount: ₹${payment.amount} | Raw UPI Input: "${payment.upiId}" | Target App: "${upiAppInfo.brandLabel}" | Launch URL: "${upiAppInfo.url}"`);
+
     window.location.href = upiAppInfo.url;
   };
 
