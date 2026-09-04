@@ -123,11 +123,16 @@ export const getUrgencyStatus = (dueDay: number, monthKey: string, isPaid: boole
 };
 
 /**
- * Extracts a clean 10-digit Indian mobile number if valid, otherwise returns null.
+ * Extracts a clean 10-digit Indian mobile number if input is ONLY digits/phone.
+ * If input contains '@', it is already a full VPA and returns null to preserve original handle.
  */
 export const getCleanPhoneNumber = (input?: string): string | null => {
   if (!input || !input.trim()) return null;
-  const digitsOnly = input.trim().replace(/\D/g, '');
+  const trimmed = input.trim();
+  // If input contains '@', it's already a full VPA (e.g. 7978003934@ybl) - do not strip or alter handle!
+  if (trimmed.includes('@')) return null;
+
+  const digitsOnly = trimmed.replace(/\D/g, '');
   if (/^[6-9]\d{9}$/.test(digitsOnly)) {
     return digitsOnly;
   }
