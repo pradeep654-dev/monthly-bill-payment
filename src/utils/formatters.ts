@@ -164,18 +164,7 @@ export const getUpiAppUrl = (
     return `upi://pay`;
   }
 
-  const rawInput = upiId.trim();
-  const phone = getCleanPhoneNumber(rawInput);
-
-  let vpa = rawInput;
-  if (phone) {
-    // For 10-digit mobile numbers, NPCI requires a PSP handle (@paytm, @ybl, @oksbi) matching the target app
-    // to route the transaction cleanly without throwing "Technical Glitch"
-    if (app === 'PhonePe') vpa = `${phone}@ybl`;
-    else if (app === 'GPay') vpa = `${phone}@oksbi`;
-    else vpa = `${phone}@paytm`;
-  }
-
+  const vpa = upiId.trim();
   const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
   let finalUrl = `upi://pay?${upiQuery}`;
