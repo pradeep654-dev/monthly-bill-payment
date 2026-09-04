@@ -47,6 +47,28 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     return payees;
   }, [payments]);
 
+  const handlePasteUpi = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData('text');
+    if (!pastedText) return;
+
+    // Check if pasted text contains an Indian 10-digit mobile number
+    const digitsOnly = pastedText.replace(/\D/g, '');
+    if (/^[6-9]\d{9}$/.test(digitsOnly)) {
+      e.preventDefault();
+      setUpiId(digitsOnly);
+      setContactHint('✓ Mobile number auto-formatted from Clipboard!');
+      setTimeout(() => setContactHint(''), 4000);
+      return;
+    }
+    if (digitsOnly.length === 12 && digitsOnly.startsWith('91') && /^[6-9]\d{9}$/.test(digitsOnly.slice(2))) {
+      e.preventDefault();
+      setUpiId(digitsOnly.slice(2));
+      setContactHint('✓ Mobile number auto-formatted from Clipboard!');
+      setTimeout(() => setContactHint(''), 4000);
+      return;
+    }
+  };
+
   const handlePickContact = async () => {
     if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
       try {
@@ -65,16 +87,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           return;
         }
       } catch (err) {
-        console.warn('Contact picker cancelled or unhandled', err);
+        console.warn('Native contact picker cancelled or unhandled', err);
       }
     }
 
-    // Universal fallback: Focus input smoothly and display hint/recent payees without browser alert()
+    // iPhone / iOS Safari & Universal PWA fallback:
+    // Focus the input field (triggers iOS keyboard with "Contacts" autofill bar above keyboard)
     const inputEl = document.getElementById('upi-phone-input');
-    if (inputEl) inputEl.focus();
+    if (inputEl) {
+      inputEl.focus();
+    }
 
-    setContactHint('Type a 10-digit mobile number (e.g. 9876543210) or UPI ID');
-    setTimeout(() => setContactHint(''), 4000);
+    setContactHint('📱 Tap "Contacts" above your iPhone keyboard, or paste any 10-digit number!');
+    setTimeout(() => setContactHint(''), 6000);
   };
 
   useEffect(() => {
@@ -335,9 +360,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               <input
                 id="upi-phone-input"
-                type="text"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                name="tel"
                 placeholder="e.g. 9876543210 or payee@paytm"
                 value={upiId}
+                onPaste={handlePasteUpi}
                 onChange={e => setUpiId(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-blue-500/40"
               />
