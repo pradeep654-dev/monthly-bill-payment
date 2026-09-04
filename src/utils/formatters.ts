@@ -139,8 +139,9 @@ export const getCleanPhoneNumber = (input?: string): string | null => {
 
 /**
  * Generates Paytm UPI payment deep link URL targeting Paytm explicitly.
- * Uses Android intent URL targeting net.one97.paytm package and iOS paytmmp:// scheme
- * so Paytm opens directly without launching WhatsApp or showing generic app choosers.
+ * Uses Android intent URL targeting net.one97.paytm package with scheme=upi
+ * and iOS paytmmp://upi/pay scheme for non-Paytm handles (@ybl, @oksbi, etc.)
+ * so Paytm opens directly without throwing "Invalid UPI ID" or launching WhatsApp.
  */
 export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: string): string => {
   const nameEncoded = encodeURIComponent(payeeName.trim());
@@ -149,7 +150,7 @@ export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: stri
   if (!upiId || !upiId.trim()) {
     return isAndroid
       ? `intent://pay#Intent;scheme=upi;package=net.one97.paytm;end`
-      : `paytmmp://pay`;
+      : `paytmmp://upi/pay`;
   }
 
   const phone = getCleanPhoneNumber(upiId);
@@ -157,10 +158,20 @@ export const generatePaytmUrl = (payeeName: string, amount: number, upiId?: stri
   const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
   if (isAndroid) {
+    // Android Intent specifically targeting net.one97.paytm with scheme=upi
+    // This forces Paytm to process ALL VPA handles (@ybl, @oksbi, @paytm) without "Invalid UPI ID" error
     return `intent://pay?${upiQuery}#Intent;scheme=upi;package=net.one97.paytm;end`;
   }
 
-  return `paytmmp://pay?${upiQuery}`;
+  // iOS / Other:
+  // For @paytm handles, paytmmp://pay works directly.
+  // For external handles like @ybl, @oksbi, paytmmp://upi/pay triggers Paytm's NPCI UPI parser instead of internal user lookup.
+  const isPaytmHandle = vpa.toLowerCase().endsWith('@paytm');
+  if (isPaytmHandle) {
+    return `paytmmp://pay?${upiQuery}`;
+  }
+
+  return `paytmmp://upi/pay?${upiQuery}`;
 };
 
 export const generateUpiUrl = generatePaytmUrl;
