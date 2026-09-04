@@ -164,8 +164,23 @@ export const getUpiAppUrl = (
     return `upi://pay`;
   }
 
-  const vpa = upiId.trim();
-  const upiQuery = `pa=${vpa}&pn=${nameEncoded}&am=${amount}&cu=INR`;
+  const rawInput = upiId.trim();
+  const phone = getCleanPhoneNumber(rawInput);
+
+  let vpa = rawInput;
+  let mobileParam = '';
+
+  if (phone) {
+    // 10-digit mobile number:
+    // Format VPA with target app's PSP handle and add mobile= parameter
+    // so Paytm, PhonePe & GPay parsers validate VPA syntax cleanly without "Invalid UPI ID" error
+    mobileParam = `&mobile=${phone}`;
+    if (app === 'PhonePe') vpa = `${phone}@ybl`;
+    else if (app === 'GPay') vpa = `${phone}@oksbi`;
+    else vpa = `${phone}@paytm`;
+  }
+
+  const upiQuery = `pa=${vpa}${mobileParam}&pn=${nameEncoded}&am=${amount}&cu=INR`;
 
   let finalUrl = `upi://pay?${upiQuery}`;
   if (app === 'Paytm') {
