@@ -138,18 +138,26 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
             Savings Account Allocation
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {accountBreakdown.map(acc => (
               <div
                 key={acc.id}
-                className="p-3 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-slate-800 flex items-center justify-between"
+                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-slate-800/80 flex flex-col space-y-2"
               >
-                <div className="flex items-center space-x-2">
+                {/* Bank Badge with Logo */}
+                <div className="flex items-center justify-between">
                   <BankBadge bankName={acc.name} showFullName />
                 </div>
-                <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                  {formatCurrency(acc.allocated)}
-                </span>
+
+                {/* Amount Allocated displayed cleanly below bank name */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/80">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Allocated Savings
+                  </span>
+                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                    {formatCurrency(acc.allocated)}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
