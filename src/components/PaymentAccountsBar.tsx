@@ -110,9 +110,11 @@ export const PaymentAccountsBar: React.FC = () => {
       <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-none">
         {paymentMethods.map(method => {
           const IconComp = getAccountIcon(method.type);
-          const displayAccNo = method.accountNumberEnding 
-            ? (method.type === 'bank' ? `A/C •••• ${method.accountNumberEnding}` : method.accountNumberEnding)
-            : (method.accountNumber ? `A/C ${method.accountNumber}` : null);
+          const displayAccNo = method.accountNumber
+            ? (method.type === 'bank' ? `A/C ${method.accountNumber}` : method.accountNumber)
+            : (method.accountNumberEnding 
+              ? (method.type === 'bank' ? `A/C •••• ${method.accountNumberEnding}` : method.accountNumberEnding)
+              : null);
 
           return (
             <div

@@ -303,26 +303,38 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
                     Select Your Primary Bank
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {SUPPORTED_BANKS.map(bank => (
-                      <button
-                        key={bank.id}
-                        type="button"
-                        onClick={() => setSelectedBankId(bank.id)}
-                        className={`p-3 rounded-2xl border text-left transition-all relative ${
-                          selectedBankId === bank.id
-                            ? 'bg-emerald-500/10 border-emerald-500 dark:border-emerald-400 text-slate-900 dark:text-white ring-2 ring-emerald-500/30'
-                            : 'bg-slate-50 dark:bg-[#0D1322] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-black text-xs">{bank.name}</span>
-                          {selectedBankId === bank.id && (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 stroke-[2.5]" />
-                          )}
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-400 block truncate">{bank.badge}</span>
-                      </button>
-                    ))}
+                    {SUPPORTED_BANKS.map(bank => {
+                      const existingMethod = paymentMethods.find(m => 
+                        m.id === bank.id || 
+                        m.name.toLowerCase().includes(bank.name.toLowerCase().replace(' bank', ''))
+                      );
+                      const displayBadge = existingMethod?.accountNumber 
+                        ? `A/C ${existingMethod.accountNumber}`
+                        : (existingMethod?.accountNumberEnding 
+                          ? `A/C XX${existingMethod.accountNumberEnding}` 
+                          : bank.badge);
+
+                      return (
+                        <button
+                          key={bank.id}
+                          type="button"
+                          onClick={() => setSelectedBankId(bank.id)}
+                          className={`p-3 rounded-2xl border text-left transition-all relative ${
+                            selectedBankId === bank.id
+                              ? 'bg-emerald-500/10 border-emerald-500 dark:border-emerald-400 text-slate-900 dark:text-white ring-2 ring-emerald-500/30'
+                              : 'bg-slate-50 dark:bg-[#0D1322] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-black text-xs">{bank.name}</span>
+                            {selectedBankId === bank.id && (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500 stroke-[2.5]" />
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-400 block truncate">{displayBadge}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
