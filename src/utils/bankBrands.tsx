@@ -378,15 +378,19 @@ export const BankBadge: React.FC<BankBadgeProps> = ({ bankName, className = '', 
   const brand = getBankBrandInfo(bankName);
   const LogoComp = brand.Logo;
 
+  const displayLabel = showFullName
+    ? (brand.shortName === 'Bank' ? bankName : brand.shortName)
+    : brand.shortName;
+
   return (
     <span
-      className={`text-xs font-black px-3 py-1.5 rounded-xl shrink-0 ${brand.badgeBg} ${brand.badgeBorder} shadow-md flex items-center space-x-2 transition-transform active:scale-95 ${className}`}
+      className={`text-xs font-black px-2.5 py-1 rounded-xl max-w-full overflow-hidden ${brand.badgeBg} ${brand.badgeBorder} shadow-md flex items-center space-x-1.5 shrink-0 ${className}`}
     >
-      <div className="w-5 h-5 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white p-0.5 shadow-sm border border-white">
-        <LogoComp className="w-4 h-4" />
+      <div className="w-4 h-4 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white p-0.5 shadow-sm border border-white">
+        <LogoComp className="w-3.5 h-3.5" />
       </div>
-      <span className={`tracking-wider ${brand.badgeText} text-xs font-black drop-shadow-xs`}>
-        {showFullName ? brand.fullName : brand.shortName}
+      <span className={`tracking-wide ${brand.badgeText} text-xs font-black truncate max-w-[140px]`}>
+        {displayLabel}
       </span>
     </span>
   );
