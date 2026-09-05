@@ -69,14 +69,16 @@ app.post('/api/bank/create-consent', async (req, res) => {
 
         const data = await setuRes.json();
         console.log('Setu API Response:', data);
-        if (data.id || data.url) {
+        if (setuRes.ok && (data.id || data.url)) {
           const sId = data.id || consentId;
           activeSessions.set(sId, { phoneNumber, bankId, setuSession: true, redirectUrl: data.url });
           return res.json({
             success: true,
             consentId: sId,
-            redirectUrl: data.url || `https://fiu-sandbox.setu.co/consents/${sId}`
+            redirectUrl: data.url
           });
+        } else if (data.message) {
+          console.warn('Setu API Error:', data.message);
         }
       } catch (err) {
         console.warn('Setu Live Call fallback to local session:', err.message);
@@ -93,7 +95,6 @@ app.post('/api/bank/create-consent', async (req, res) => {
     res.json({
       success: true,
       consentId,
-      redirectUrl: `https://fiu-sandbox.setu.co/consents/${consentId}`,
       message: `Consent session generated for +91 ${phoneNumber}. Enter verification OTP.`
     });
   } catch (err) {
