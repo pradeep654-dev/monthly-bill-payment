@@ -45,6 +45,7 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
   const [otp, setOtp] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [consentSessionId, setConsentSessionId] = useState('');
+  const [setuRedirectUrl, setSetuRedirectUrl] = useState('');
   const [syncedResult, setSyncedResult] = useState<{
     bankName: string;
     accountEnding: string;
@@ -73,6 +74,7 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
 
     if (res.success) {
       if (res.consentId) setConsentSessionId(res.consentId);
+      if (res.redirectUrl) setSetuRedirectUrl(res.redirectUrl);
       setAaStep('otp');
       setOtp('482910'); // Auto-filled OTP for smooth testing
     }
@@ -417,6 +419,18 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
                     ✓ Sample OTP auto-filled (482910)
                   </p>
                 </div>
+
+                {setuRedirectUrl && (
+                  <a
+                    href={setuRedirectUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-2.5 px-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center space-x-1.5"
+                  >
+                    <span>Open Official Setu Bank Consent Web View</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
 
                 <button
                   type="submit"

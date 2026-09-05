@@ -38,10 +38,10 @@ app.post('/api/bank/create-consent', async (req, res) => {
 
     const consentId = `consent-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-    // If Setu credentials exist, make real call to Setu AA FIU sandbox
+    // If Setu credentials exist, make real call to Setu AA FIU sandbox / production
     if (SETU_CLIENT_ID && SETU_CLIENT_SECRET) {
       try {
-        const response = await fetch(`${SETU_BASE_URL}/consents`, {
+        const setuRes = await fetch(`${SETU_BASE_URL}/consents`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -49,6 +49,7 @@ app.post('/api/bank/create-consent', async (req, res) => {
             'x-client-secret': SETU_CLIENT_SECRET
           },
           body: JSON.stringify({
+            redirectUrl: 'http://localhost:5173/monthly-bill-payment/',
             detail: {
               consentStart: new Date().toISOString(),
               consentExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
@@ -66,10 +67,16 @@ app.post('/api/bank/create-consent', async (req, res) => {
           })
         });
 
-        const data = await response.json();
-        if (data.id) {
-          activeSessions.set(data.id, { phoneNumber, bankId, setuSession: true });
-          return res.json({ success: true, consentId: data.id, redirectUrl: data.url });
+        const data = await setuRes.json();
+        console.log('Setu API Response:', data);
+        if (data.id || data.url) {
+          const sId = data.id || consentId;
+          activeSessions.set(sId, { phoneNumber, bankId, setuSession: true, redirectUrl: data.url });
+          return res.json({
+            success: true,
+            consentId: sId,
+            redirectUrl: data.url || `https://fiu-sandbox.setu.co/consents/${sId}`
+          });
         }
       } catch (err) {
         console.warn('Setu Live Call fallback to local session:', err.message);
