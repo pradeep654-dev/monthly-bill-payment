@@ -501,8 +501,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       prev.map(m => {
         if (m.id === id) {
           if (data.balance !== undefined) {
-            const totalPaidForMethod = currentMonthPayments
-              .filter(p => p.isPaid && !p.isSkipped && (p.paymentMethodId === id || (!p.paymentMethodId && id === 'pm-sbi')))
+            const totalPaidForMethod = payments
+              .filter(p => p.isPaid && !p.isSkipped && getEffectiveMethodId(p, prev) === id)
               .reduce((sum, p) => sum + p.amount, 0);
             return {
               ...m,

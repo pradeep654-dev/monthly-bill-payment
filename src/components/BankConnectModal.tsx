@@ -70,6 +70,9 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
     }, 800);
   };
 
+  // Imported Txns Tracker
+  const [importedTxnIds, setImportedTxnIds] = useState<Set<string>>(new Set());
+
   // Handle OTP Verification and Live Bank Statement Fetching
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +98,10 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
       });
 
       // Find matching payment method in context or create new
-      const existingMethod = paymentMethods.find(m => m.name.toLowerCase().includes(selectedBankObj.name.toLowerCase()) || m.id === selectedBankId);
+      const existingMethod = paymentMethods.find(m => 
+        m.id === selectedBankId || 
+        m.name.toLowerCase().includes(selectedBankObj.name.toLowerCase())
+      );
       if (existingMethod) {
         updatePaymentMethod(existingMethod.id, {
           balance: liveBal,
@@ -117,19 +123,26 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
   };
 
   // Import fetched AA transaction into payments list
-  const handleImportTransaction = (txn: { name: string; amount: number; category: any; dueDay: number }) => {
-    const existingMethod = paymentMethods.find(m => m.name.toLowerCase().includes(selectedBankId.toLowerCase())) || paymentMethods[0];
+  const handleImportTransaction = (txn: { id: string; name: string; amount: number; category: any; dueDay: number }) => {
+    const selectedBankObj = SUPPORTED_BANKS.find(b => b.id === selectedBankId) || SUPPORTED_BANKS[0];
+    const targetMethod = paymentMethods.find(m => 
+      m.id === selectedBankId || 
+      m.name.toLowerCase().includes(selectedBankObj.name.toLowerCase())
+    ) || paymentMethods[0];
+
     addPayment({
       name: txn.name,
       amount: txn.amount,
       dueDay: txn.dueDay,
       category: txn.category,
       commitmentType: txn.category === 'investment' ? 'savings' : 'commitment',
-      paymentMethodId: existingMethod?.id || 'pm-1',
+      paymentMethodId: targetMethod?.id || 'pm-1',
       isRecurring: true,
       isAutopayEnabled: true,
-      notes: `Synced via Account Aggregator Live Statement on ${new Date().toLocaleDateString()}`
+      notes: `Synced via ${selectedBankObj.name} Account Aggregator Live Statement on ${new Date().toLocaleDateString()}`
     });
+
+    setImportedTxnIds(prev => new Set(prev).add(txn.id));
   };
 
   // SMS Parser Live Input Change
@@ -154,11 +167,32 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
     if (!smsParseResult || !smsParseResult.success) return;
 
     // Find or match Payment Method
-    const targetMethod = paymentMethods.find(m => 
+    let targetMethod = paymentMethods.find(m => 
       m.name.toLowerCase().includes(smsParseResult.bankName.toLowerCase()) ||
-      (smsParseResult.bankName.toLowerCase().includes('sbi') && m.id === 'pm-sbi') ||
-      (smsParseResult.bankName.toLowerCase().includes('hdfc') && m.id === 'pm-1')
-    ) || paymentMethods[0];
+      (smsParseResult.bankName.toLowerCase().includes('sbi') && (m.id === 'pm-sbi' || m.name.toLowerCase().includes('sbi'))) ||
+      (smsParseResult.bankName.toLowerCase().includes('hdfc') && (m.id === 'pm-1' || m.name.toLowerCase().includes('hdfc')))
+    );
+
+    // If bank method does not exist yet, automatically add it!
+    if (!targetMethod && smsParseResult.bankName) {
+      const newMethodId = `pm-${Date.now()}`;
+      const initialBal = smsParseResult.newBalance ?? (smsParseResult.type === 'credit' ? smsParseResult.amount : 25000);
+      addPaymentMethod({
+        name: smsParseResult.bankName,
+        type: smsParseResult.bankName.toLowerCase().includes('upi') || smsParseResult.bankName.toLowerCase().includes('wallet') ? 'wallet' : 'bank',
+        balance: initialBal,
+        initialBalance: initialBal,
+        accountNumberEnding: smsParseResult.accountEnding,
+        lastSyncedAt: new Date().toISOString()
+      });
+      targetMethod = {
+        id: newMethodId,
+        name: smsParseResult.bankName,
+        type: 'bank',
+        balance: initialBal,
+        initialBalance: initialBal
+      };
+    }
 
     // Update target bank balance if parsed from SMS
     if (smsParseResult.newBalance !== undefined && targetMethod) {
@@ -186,7 +220,7 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
     setSmsApplySuccess(true);
     setTimeout(() => {
       setSmsApplySuccess(false);
-    }, 3000);
+    }, 3500);
   };
 
   const copyDevCode = () => {
@@ -427,10 +461,15 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
                           </span>
                           <button
                             onClick={() => handleImportTransaction(txn)}
-                            className="p-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-[10px] hover:scale-105 active:scale-95 transition-all"
-                            title="Import as Payment Item"
+                            disabled={importedTxnIds.has(txn.id)}
+                            className={`p-1.5 rounded-xl font-black text-[10px] transition-all ${
+                              importedTxnIds.has(txn.id)
+                                ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-default'
+                                : 'bg-emerald-500 hover:scale-105 active:scale-95 text-slate-950 shadow-sm'
+                            }`}
+                            title={importedTxnIds.has(txn.id) ? 'Imported to payments' : 'Import as Payment Item'}
                           >
-                            + Add
+                            {importedTxnIds.has(txn.id) ? '✓ Added' : '+ Add'}
                           </button>
                         </div>
                       </div>
