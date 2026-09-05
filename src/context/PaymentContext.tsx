@@ -851,9 +851,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Dynamically compute live bank balances deducting all paid savings and bills for each account
   const effectivePaymentMethods: PaymentMethod[] = useMemo(() => {
     return paymentMethods.map(method => {
-      // Sum of all paid items for this payment method across all recorded payments up to current month
+      // Sum of paid items for this payment method in the current month
       const totalPaidForMethod = payments
-        .filter(p => p.isPaid && !p.isSkipped && getEffectiveMethodId(p, paymentMethods) === method.id)
+        .filter(p => p.isPaid && !p.isSkipped && p.monthKey === currentMonthKey && getEffectiveMethodId(p, paymentMethods) === method.id)
         .reduce((sum, p) => sum + p.amount, 0);
 
       let baseInitial = method.initialBalance;
@@ -872,7 +872,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         balance: computedBalance
       };
     });
-  }, [paymentMethods, payments]);
+  }, [paymentMethods, payments, currentMonthKey]);
 
   // Total liquid bank balance across all payment methods
   const totalBankBalance = useMemo(() => {
