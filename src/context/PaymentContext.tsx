@@ -190,8 +190,11 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             if (name.toLowerCase().includes('gpay') || name.toLowerCase().includes('phonepe')) {
               name = 'Paytm UPI';
             }
-            const defaultInitial = m.id === 'pm-1' ? 55000 : (m.id === 'pm-2' ? 15000 : 40000);
-            const initialBal = (m.initialBalance !== undefined && m.initialBalance !== null) ? m.initialBalance : defaultInitial;
+            const defaultInitial = m.id === 'pm-1' ? 40000 : (m.id === 'pm-2' ? 15000 : 40000);
+            let initialBal = (m.initialBalance !== undefined && m.initialBalance !== null) ? m.initialBalance : defaultInitial;
+            if (m.id === 'pm-1' && initialBal === 55000) {
+              initialBal = 40000;
+            }
             return {
               ...m,
               name,
@@ -861,8 +864,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .reduce((sum, p) => sum + p.amount, 0);
 
       let baseInitial = method.initialBalance;
-      if (baseInitial === undefined || baseInitial === null) {
-        if (method.id === 'pm-1') baseInitial = 55000;
+      if (baseInitial === undefined || baseInitial === null || (method.id === 'pm-1' && baseInitial === 55000)) {
+        if (method.id === 'pm-1') baseInitial = 40000;
         else if (method.id === 'pm-2') baseInitial = 15000;
         else if (method.id === 'pm-sbi') baseInitial = 40000;
         else baseInitial = method.balance + totalPaidForMethod;
