@@ -55,6 +55,7 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
   const [smsParseResult, setSmsParseResult] = useState<ParsedSmsResult | null>(null);
   const [smsApplySuccess, setSmsApplySuccess] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [importedTxnIds, setImportedTxnIds] = useState<Set<string>>(new Set());
 
   if (!isOpen) return null;
 
@@ -69,9 +70,6 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
       setOtp('482910'); // Auto-filled OTP for smooth testing
     }, 800);
   };
-
-  // Imported Txns Tracker
-  const [importedTxnIds, setImportedTxnIds] = useState<Set<string>>(new Set());
 
   // Handle OTP Verification and Live Bank Statement Fetching
   const handleVerifyOtp = (e: React.FormEvent) => {
