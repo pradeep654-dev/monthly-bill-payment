@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Landmark, Wallet, CreditCard, Banknote, Plus, X, Trash2 } from 'lucide-react';
+import { Plus, X, Trash2 } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { formatCurrency } from '../utils/formatters';
+import { getBankBrandInfo } from '../utils/bankBrands';
 import type { PaymentMethod, AccountType } from '../types';
 
 export const PaymentAccountsBar: React.FC = () => {
@@ -65,15 +66,7 @@ export const PaymentAccountsBar: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const getAccountIcon = (accType: AccountType) => {
-    switch (accType) {
-      case 'bank': return Landmark;
-      case 'wallet': return Wallet;
-      case 'card': return CreditCard;
-      case 'cash': return Banknote;
-      default: return Landmark;
-    }
-  };
+
 
   return (
     <div className="mt-5">
@@ -95,10 +88,11 @@ export const PaymentAccountsBar: React.FC = () => {
         </div>
       </div>
 
-      {/* Horizontal List of Accounts */}
+      {/* Horizontal List of Accounts with Official Bank Brand Logos & Colors */}
       <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-none">
         {paymentMethods.map(method => {
-          const IconComp = getAccountIcon(method.type);
+          const brand = getBankBrandInfo(method.name);
+          const LogoComp = brand.Logo;
           const displayAccNo = method.accountNumber
             ? (method.type === 'bank' ? `A/C ${method.accountNumber}` : method.accountNumber)
             : (method.accountNumberEnding 
@@ -109,17 +103,17 @@ export const PaymentAccountsBar: React.FC = () => {
             <div
               key={method.id}
               onClick={() => openEditModal(method)}
-              className="app-card rounded-[22px] p-4 min-w-[185px] shrink-0 cursor-pointer active:scale-95 transition-all duration-200 border border-white/20 dark:bg-[#080E1B]"
+              className={`app-card rounded-[22px] p-4 min-w-[190px] shrink-0 cursor-pointer active:scale-95 transition-all duration-200 border ${brand.cardBorder} ${brand.cardBg} backdrop-blur-md shadow-md`}
             >
               <div className="flex items-center justify-between mb-2.5">
-                {/* Deep White Icon Capsule */}
-                <div className="p-2 rounded-2xl bg-white text-slate-950 shadow-xs border border-white">
-                  <IconComp className="w-4 h-4 stroke-[2.5]" />
+                {/* Official Bank Brand SVG Logo Icon Container */}
+                <div className="p-2 rounded-2xl bg-white/95 dark:bg-white/90 shadow-md border border-white shrink-0 flex items-center justify-center">
+                  <LogoComp className="w-5 h-5" />
                 </div>
 
-                {/* Deep White Account Type Badge */}
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white text-slate-950 border border-white shadow-2xs">
-                  {method.type}
+                {/* Bank Brand Badge */}
+                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${brand.badgeBg} border ${brand.badgeBorder} shadow-2xs`}>
+                  {brand.shortName}
                 </span>
               </div>
 
@@ -128,7 +122,7 @@ export const PaymentAccountsBar: React.FC = () => {
               </h4>
 
               {displayAccNo && (
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 block mb-1">
                   {displayAccNo}
                 </span>
               )}

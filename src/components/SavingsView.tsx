@@ -5,6 +5,7 @@ import { PaymentItemCard } from './PaymentItemCard';
 import type { PaymentItem } from '../types';
 import { formatCurrency, sortByUpcomingAndDate } from '../utils/formatters';
 import { getCategoryMeta } from '../utils/categories';
+import { BankBadge } from '../utils/bankBrands';
 
 interface SavingsViewProps {
   onAddSavings: () => void;
@@ -144,10 +145,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 className="p-3 rounded-2xl bg-slate-50 dark:bg-[#0D1322] border border-slate-200 dark:border-slate-800 flex items-center justify-between"
               >
                 <div className="flex items-center space-x-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {acc.name}
-                  </span>
+                  <BankBadge bankName={acc.name} showFullName />
                 </div>
                 <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(acc.allocated)}

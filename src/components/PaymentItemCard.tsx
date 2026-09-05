@@ -1,9 +1,10 @@
 import React from 'react';
-import { Check, Calendar, SkipForward, Sparkles, Landmark } from 'lucide-react';
+import { Check, Calendar, SkipForward, Sparkles } from 'lucide-react';
 import type { PaymentItem } from '../types';
 import { usePayments, getEffectiveMethodId } from '../context/PaymentContext';
 import { getCategoryMeta } from '../utils/categories';
-import { formatCurrency, getUrgencyStatus, getUpiTargetAppInfo, formatDueDay, formatShortBankName } from '../utils/formatters';
+import { formatCurrency, getUrgencyStatus, getUpiTargetAppInfo, formatDueDay } from '../utils/formatters';
+import { BankBadge } from '../utils/bankBrands';
 import { trackUpiPaymentLaunch } from './UpiReturnPrompt';
 
 interface PaymentItemCardProps {
@@ -25,7 +26,6 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
   const fullBankName = linkedAccount
     ? linkedAccount.name
     : (payment.commitmentType === 'savings' || categoryMeta.group === 'savings' ? 'SBI Bank' : 'HDFC Bank');
-  const bankName = formatShortBankName(fullBankName);
 
   const urgency = getUrgencyStatus(payment.dueDay, currentMonthKey, payment.isPaid);
   const categoryBudget = categoryBudgetSummaries.find(s => s.category === payment.category);
@@ -170,11 +170,8 @@ export const PaymentItemCard: React.FC<PaymentItemCardProps> = ({
               {categoryMeta.label}
             </span>
 
-            {/* Bank / Payment Method Badge */}
-            <span className="text-xs font-black px-3 py-1 rounded-xl shrink-0 bg-blue-500/10 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-400/30 flex items-center space-x-1">
-              <Landmark className="w-3.5 h-3.5 stroke-[2.2] text-blue-600 dark:text-blue-400 shrink-0" />
-              <span>{bankName}</span>
-            </span>
+            {/* Bank / Payment Method Badge with Original Logo & Colors */}
+            <BankBadge bankName={fullBankName} />
 
             {/* Autopay Badge */}
             {payment.isAutopayEnabled && (
