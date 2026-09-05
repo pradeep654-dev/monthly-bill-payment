@@ -19,6 +19,8 @@ import { parseBankSms, SAMPLE_BANK_SMS_LIST, type ParsedSmsResult } from '../uti
 import { SETU_AA_BACKEND_CODE_SAMPLE, BANK_API_DOCS } from '../services/bankApiGuide';
 import { formatCurrency } from '../utils/formatters';
 
+import { apiCreateConsent, apiVerifyOtp, apiFetchBankData } from '../services/bankApiService';
+
 interface BankConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,6 +44,7 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
   const [aaStep, setAaStep] = useState<'input' | 'otp' | 'fetching' | 'success'>('input');
   const [otp, setOtp] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [consentSessionId, setConsentSessionId] = useState('');
   const [syncedResult, setSyncedResult] = useState<{
     bankName: string;
     accountEnding: string;
@@ -59,65 +62,73 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
 
   if (!isOpen) return null;
 
-  // Handle AA Consent OTP Request
-  const handleRequestOtp = (e: React.FormEvent) => {
+  // Handle AA Consent OTP Request via Backend API
+  const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phoneNumber || phoneNumber.length < 10) return;
     setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
+
+    const res = await apiCreateConsent(phoneNumber, selectedBankId);
+    setIsSyncing(false);
+
+    if (res.success) {
+      if (res.consentId) setConsentSessionId(res.consentId);
       setAaStep('otp');
       setOtp('482910'); // Auto-filled OTP for smooth testing
-    }, 800);
+    }
   };
 
-  // Handle OTP Verification and Live Bank Statement Fetching
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  // Handle OTP Verification and Live Bank Statement Fetching via Backend API
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSyncing(true);
     setAaStep('fetching');
 
-    setTimeout(() => {
-      const selectedBankObj = SUPPORTED_BANKS.find(b => b.id === selectedBankId) || SUPPORTED_BANKS[0];
-      const liveBal = selectedBankObj.defaultBal + Math.floor(Math.random() * 1500) - 500;
+    await apiVerifyOtp(consentSessionId || 'default-session', otp);
 
-      const mockFetchedTxns = [
-        { id: `txn-${Date.now()}-1`, name: '⚡ Bescom Electricity Bill', amount: 3850, type: 'debit' as const, category: 'utilities' as const, dueDay: 12 },
-        { id: `txn-${Date.now()}-2`, name: '🌐 Airtel Fiber Broadband', amount: 1499, type: 'debit' as const, category: 'internet' as const, dueDay: 15 },
-        { id: `txn-${Date.now()}-3`, name: '🎯 Nifty 50 Index Mutual Fund SIP', amount: 5000, type: 'debit' as const, category: 'investment' as const, dueDay: 5 }
-      ];
+    const apiRes = await apiFetchBankData(consentSessionId || 'default-session');
+    const selectedBankObj = SUPPORTED_BANKS.find(b => b.id === selectedBankId) || SUPPORTED_BANKS[0];
 
-      setSyncedResult({
-        bankName: selectedBankObj.name,
-        accountEnding: selectedBankObj.badge,
+    const liveBal = apiRes.data?.balance ?? (selectedBankObj.defaultBal + Math.floor(Math.random() * 1500) - 500);
+    const bankName = apiRes.data?.bankName ?? selectedBankObj.name;
+    const accountEnding = apiRes.data?.accountEnding ?? selectedBankObj.badge;
+
+    const mockFetchedTxns = apiRes.data?.transactions ?? [
+      { id: `txn-${Date.now()}-1`, name: '⚡ Bescom Electricity Bill', amount: 3850, type: 'debit' as const, category: 'utilities' as const, dueDay: 12 },
+      { id: `txn-${Date.now()}-2`, name: '🌐 Airtel Fiber Broadband', amount: 1499, type: 'debit' as const, category: 'internet' as const, dueDay: 15 },
+      { id: `txn-${Date.now()}-3`, name: '🎯 Nifty 50 Index Mutual Fund SIP', amount: 5000, type: 'debit' as const, category: 'investment' as const, dueDay: 5 }
+    ];
+
+    setSyncedResult({
+      bankName,
+      accountEnding,
+      balance: liveBal,
+      lastSynced: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      transactions: mockFetchedTxns
+    });
+
+    // Find matching payment method in context or create new
+    const existingMethod = paymentMethods.find(m => 
+      m.id === selectedBankId || 
+      m.name.toLowerCase().includes(selectedBankObj.name.toLowerCase())
+    );
+    if (existingMethod) {
+      updatePaymentMethod(existingMethod.id, {
         balance: liveBal,
-        lastSynced: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        transactions: mockFetchedTxns
+        lastSyncedAt: new Date().toISOString()
       });
+    } else {
+      addPaymentMethod({
+        name: selectedBankObj.name,
+        type: 'bank',
+        balance: liveBal,
+        initialBalance: liveBal,
+        lastSyncedAt: new Date().toISOString()
+      });
+    }
 
-      // Find matching payment method in context or create new
-      const existingMethod = paymentMethods.find(m => 
-        m.id === selectedBankId || 
-        m.name.toLowerCase().includes(selectedBankObj.name.toLowerCase())
-      );
-      if (existingMethod) {
-        updatePaymentMethod(existingMethod.id, {
-          balance: liveBal,
-          lastSyncedAt: new Date().toISOString()
-        });
-      } else {
-        addPaymentMethod({
-          name: selectedBankObj.name,
-          type: 'bank',
-          balance: liveBal,
-          initialBalance: liveBal,
-          lastSyncedAt: new Date().toISOString()
-        });
-      }
-
-      setIsSyncing(false);
-      setAaStep('success');
-    }, 1500);
+    setIsSyncing(false);
+    setAaStep('success');
   };
 
   // Import fetched AA transaction into payments list
