@@ -802,14 +802,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         if (isSbi || isHdfc) {
           const targetShare = isSbi ? sbiShare : hdfcShare;
-          const methodId = m.id;
-          const totalPaidForMethod = currentMonthPayments
-            .filter(p => p.isPaid && !p.isSkipped && getEffectiveMethodId(p, methods) === methodId)
-            .reduce((sum, p) => sum + p.amount, 0);
-
           return {
             ...m,
-            initialBalance: targetShare + totalPaidForMethod,
+            initialBalance: targetShare,
             balance: targetShare
           };
         }
