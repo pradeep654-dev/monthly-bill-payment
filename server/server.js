@@ -93,6 +93,7 @@ app.post('/api/bank/create-consent', async (req, res) => {
     res.json({
       success: true,
       consentId,
+      redirectUrl: `https://fiu-sandbox.setu.co/consents/${consentId}`,
       message: `Consent session generated for +91 ${phoneNumber}. Enter verification OTP.`
     });
   } catch (err) {

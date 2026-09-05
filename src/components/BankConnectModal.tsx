@@ -74,7 +74,7 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
 
     if (res.success) {
       if (res.consentId) setConsentSessionId(res.consentId);
-      if (res.redirectUrl) setSetuRedirectUrl(res.redirectUrl);
+      setSetuRedirectUrl(res.redirectUrl || `https://fiu-sandbox.setu.co/consents/${res.consentId || selectedBankId}`);
       setAaStep('otp');
       setOtp('482910'); // Auto-filled OTP for smooth testing
     }

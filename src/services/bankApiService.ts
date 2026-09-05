@@ -55,9 +55,11 @@ export const apiCreateConsent = async (phoneNumber: string, bankId: string): Pro
   } catch (err: any) {
     console.warn('Backend API unavailable, using client session:', err?.message);
   }
+  const fallbackConsentId = `consent-${Date.now()}-${bankId}`;
   return {
     success: true,
-    consentId: `consent-${Date.now()}-${bankId}`
+    consentId: fallbackConsentId,
+    redirectUrl: `https://fiu-sandbox.setu.co/consents/${fallbackConsentId}`
   };
 };
 
