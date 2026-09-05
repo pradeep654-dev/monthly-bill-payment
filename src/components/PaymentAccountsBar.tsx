@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Landmark, Wallet, CreditCard, Banknote, Plus, X, Trash2, RefreshCw } from 'lucide-react';
+import { Landmark, Wallet, CreditCard, Banknote, Plus, X, Trash2 } from 'lucide-react';
 import { usePayments } from '../context/PaymentContext';
 import { formatCurrency } from '../utils/formatters';
-import { BankConnectModal } from './BankConnectModal';
 import type { PaymentMethod, AccountType } from '../types';
 
 export const PaymentAccountsBar: React.FC = () => {
   const { paymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } = usePayments();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isBankSyncModalOpen, setIsBankSyncModalOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
 
   const [name, setName] = useState('');
@@ -86,15 +84,6 @@ export const PaymentAccountsBar: React.FC = () => {
         </h3>
 
         <div className="flex items-center space-x-2">
-          {/* Fetch / Sync Bank Balance Button */}
-          <button
-            onClick={() => setIsBankSyncModalOpen(true)}
-            className="text-xs font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md shadow-emerald-500/20 border border-emerald-400 hover:brightness-110 flex items-center space-x-1.5 px-3 py-1.5 rounded-2xl active:scale-95 transition-all"
-          >
-            <RefreshCw className="w-3.5 h-3.5 stroke-[3]" />
-            <span>Fetch Bank Balances</span>
-          </button>
-
           {/* Deep White High Contrast + Add Account Button */}
           <button
             onClick={openAddModal}
@@ -270,11 +259,6 @@ export const PaymentAccountsBar: React.FC = () => {
         </div>
       )}
 
-      {/* Bank Connect & Statement Sync Modal */}
-      <BankConnectModal
-        isOpen={isBankSyncModalOpen}
-        onClose={() => setIsBankSyncModalOpen(false)}
-      />
     </div>
   );
 };
