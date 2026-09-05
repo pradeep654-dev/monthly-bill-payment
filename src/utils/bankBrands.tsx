@@ -151,13 +151,13 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     key: 'sbi',
     shortName: 'SBI',
     fullName: 'State Bank of India',
-    brandColor: '#003366',
+    brandColor: '#0054A6',
     secondaryColor: '#0083CA',
-    badgeBg: 'bg-[#003366] text-white',
-    badgeText: 'text-cyan-200',
-    badgeBorder: 'border-[#0083CA]/70',
-    cardBg: 'bg-[#003366]/10 dark:bg-[#002D62]/40',
-    cardBorder: 'border-[#0083CA]/40',
+    badgeBg: 'bg-[#0054A6]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-cyan-400/90 shadow-md shadow-cyan-500/20',
+    cardBg: 'bg-gradient-to-br from-[#003366]/60 via-[#002D62]/80 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#0083CA]/80 shadow-lg',
     Logo: SbiLogo
   },
   hdfc: {
@@ -166,11 +166,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     fullName: 'HDFC Bank',
     brandColor: '#004B8D',
     secondaryColor: '#ED232A',
-    badgeBg: 'bg-[#004B8D] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-[#ED232A]/80',
-    cardBg: 'bg-[#004B8D]/10 dark:bg-[#003B73]/40',
-    cardBorder: 'border-[#004B8D]/40',
+    badgeBg: 'bg-[#004B8D]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-[#ED232A] shadow-md shadow-red-500/20',
+    cardBg: 'bg-gradient-to-br from-[#003B73]/60 via-[#002855]/80 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#004B8D]/80 shadow-lg',
     Logo: HdfcLogo
   },
   icici: {
@@ -179,11 +179,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     fullName: 'ICICI Bank',
     brandColor: '#F37023',
     secondaryColor: '#052F6B',
-    badgeBg: 'bg-[#F37023] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-[#052F6B]/60',
-    cardBg: 'bg-[#F37023]/10 dark:bg-[#F37023]/25',
-    cardBorder: 'border-[#F37023]/40',
+    badgeBg: 'bg-[#F37023]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-[#052F6B] shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#F37023]/30 via-[#052F6B]/60 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#F37023]/80 shadow-lg',
     Logo: IciciLogo
   },
   axis: {
@@ -191,11 +191,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'Axis',
     fullName: 'Axis Bank',
     brandColor: '#97124B',
-    badgeBg: 'bg-[#97124B] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-[#d22d64]/60',
-    cardBg: 'bg-[#97124B]/10 dark:bg-[#97124B]/30',
-    cardBorder: 'border-[#97124B]/40',
+    badgeBg: 'bg-[#97124B]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-pink-400 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#97124B]/30 via-[#500028]/60 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#97124B]/80 shadow-lg',
     Logo: AxisLogo
   },
   kotak: {
@@ -203,24 +203,24 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'Kotak',
     fullName: 'Kotak Mahindra Bank',
     brandColor: '#ED1C24',
-    badgeBg: 'bg-[#ED1C24] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-[#003366]/60',
-    cardBg: 'bg-[#ED1C24]/10 dark:bg-[#ED1C24]/25',
-    cardBorder: 'border-[#ED1C24]/40',
+    badgeBg: 'bg-[#ED1C24]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-red-300 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#ED1C24]/30 via-[#600000]/60 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#ED1C24]/80 shadow-lg',
     Logo: KotakLogo
   },
   paytm: {
     key: 'paytm',
     shortName: 'Paytm',
-    fullName: 'Paytm Payments Bank / Wallet',
+    fullName: 'Paytm Wallet / Bank',
     brandColor: '#002970',
     secondaryColor: '#00BAF2',
-    badgeBg: 'bg-[#002970] text-[#00BAF2]',
-    badgeText: 'text-[#00BAF2]',
-    badgeBorder: 'border-[#00BAF2]/70',
-    cardBg: 'bg-[#002970]/10 dark:bg-[#002970]/40',
-    cardBorder: 'border-[#00BAF2]/40',
+    badgeBg: 'bg-[#002970]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-[#00BAF2] shadow-md shadow-cyan-500/20',
+    cardBg: 'bg-gradient-to-br from-[#002970]/60 via-[#001845]/80 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#00BAF2]/80 shadow-lg',
     Logo: PaytmLogo
   },
   phonepe: {
@@ -228,11 +228,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'PhonePe',
     fullName: 'PhonePe UPI',
     brandColor: '#5F259F',
-    badgeBg: 'bg-[#5F259F] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-purple-300/70',
-    cardBg: 'bg-[#5F259F]/10 dark:bg-[#5F259F]/30',
-    cardBorder: 'border-[#5F259F]/40',
+    badgeBg: 'bg-[#5F259F]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-purple-300 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#5F259F]/40 via-[#300060]/70 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#5F259F]/80 shadow-lg',
     Logo: PhonePeLogo
   },
   gpay: {
@@ -240,11 +240,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'GPay',
     fullName: 'Google Pay',
     brandColor: '#4285F4',
-    badgeBg: 'bg-[#1A73E8] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-blue-300/70',
-    cardBg: 'bg-blue-500/10 dark:bg-blue-950/40',
-    cardBorder: 'border-blue-400/40',
+    badgeBg: 'bg-[#1A73E8]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-blue-300 shadow-md',
+    cardBg: 'bg-gradient-to-br from-blue-600/30 via-slate-900 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-blue-400/80 shadow-lg',
     Logo: GPayLogo
   },
   pnb: {
@@ -252,11 +252,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'PNB',
     fullName: 'Punjab National Bank',
     brandColor: '#A20000',
-    badgeBg: 'bg-[#A20000] text-yellow-300',
-    badgeText: 'text-yellow-300',
-    badgeBorder: 'border-yellow-400/70',
-    cardBg: 'bg-[#A20000]/10 dark:bg-[#A20000]/30',
-    cardBorder: 'border-[#A20000]/40',
+    badgeBg: 'bg-[#A20000]',
+    badgeText: 'text-yellow-300 font-black',
+    badgeBorder: 'border-2 border-yellow-400 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#A20000]/40 via-slate-900 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-yellow-500/80 shadow-lg',
     Logo: PnbLogo
   },
   bob: {
@@ -264,11 +264,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'BOB',
     fullName: 'Bank of Baroda',
     brandColor: '#F26522',
-    badgeBg: 'bg-[#F26522] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-orange-300/70',
-    cardBg: 'bg-[#F26522]/10 dark:bg-[#F26522]/30',
-    cardBorder: 'border-[#F26522]/40',
+    badgeBg: 'bg-[#F26522]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-orange-300 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#F26522]/30 via-slate-900 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#F26522]/80 shadow-lg',
     Logo: BobLogo
   },
   canara: {
@@ -276,11 +276,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'Canara',
     fullName: 'Canara Bank',
     brandColor: '#00A3E0',
-    badgeBg: 'bg-[#00A3E0] text-yellow-200',
-    badgeText: 'text-yellow-200',
-    badgeBorder: 'border-yellow-300/70',
-    cardBg: 'bg-[#00A3E0]/10 dark:bg-[#00A3E0]/30',
-    cardBorder: 'border-[#00A3E0]/40',
+    badgeBg: 'bg-[#00A3E0]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-yellow-300 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#00A3E0]/30 via-slate-900 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#00A3E0]/80 shadow-lg',
     Logo: CanaraLogo
   },
   union: {
@@ -288,11 +288,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'Union Bank',
     fullName: 'Union Bank of India',
     brandColor: '#0054A6',
-    badgeBg: 'bg-[#0054A6] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-red-500/70',
-    cardBg: 'bg-[#0054A6]/10 dark:bg-[#0054A6]/30',
-    cardBorder: 'border-[#0054A6]/40',
+    badgeBg: 'bg-[#0054A6]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-red-500 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#0054A6]/30 via-slate-900 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#0054A6]/80 shadow-lg',
     Logo: UnionBankLogo
   },
   indusind: {
@@ -300,11 +300,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'IndusInd',
     fullName: 'IndusInd Bank',
     brandColor: '#84221A',
-    badgeBg: 'bg-[#84221A] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-red-400/70',
-    cardBg: 'bg-[#84221A]/10 dark:bg-[#84221A]/30',
-    cardBorder: 'border-[#84221A]/40',
+    badgeBg: 'bg-[#84221A]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-red-400 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#84221A]/30 via-slate-900 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#84221A]/80 shadow-lg',
     Logo: IndusIndLogo
   },
   idfc: {
@@ -312,11 +312,11 @@ export const BANK_BRANDS: Record<string, BankBrandInfo> = {
     shortName: 'IDFC',
     fullName: 'IDFC FIRST Bank',
     brandColor: '#990000',
-    badgeBg: 'bg-[#990000] text-white',
-    badgeText: 'text-white',
-    badgeBorder: 'border-amber-400/70',
-    cardBg: 'bg-[#990000]/10 dark:bg-[#990000]/30',
-    cardBorder: 'border-[#990000]/40',
+    badgeBg: 'bg-[#990000]',
+    badgeText: 'text-white font-black',
+    badgeBorder: 'border-2 border-amber-400 shadow-md',
+    cardBg: 'bg-gradient-to-br from-[#990000]/30 via-slate-900 to-[#080E1B] text-white',
+    cardBorder: 'border-2 border-[#990000]/80 shadow-lg',
     Logo: IdfcLogo
   }
 };
@@ -327,10 +327,10 @@ export const defaultBankBrand: BankBrandInfo = {
   fullName: 'Bank Account',
   brandColor: '#1E293B',
   badgeBg: 'bg-slate-900 text-white dark:bg-slate-800',
-  badgeText: 'text-slate-100',
-  badgeBorder: 'border-slate-700/60',
-  cardBg: 'bg-slate-800/10 dark:bg-slate-900/40',
-  cardBorder: 'border-slate-700/40',
+  badgeText: 'text-white font-black',
+  badgeBorder: 'border-2 border-slate-600 shadow-md',
+  cardBg: 'bg-slate-900/60 text-white',
+  cardBorder: 'border-2 border-slate-700 shadow-lg',
   Logo: DefaultBankLogo
 };
 
@@ -380,12 +380,14 @@ export const BankBadge: React.FC<BankBadgeProps> = ({ bankName, className = '', 
 
   return (
     <span
-      className={`text-xs font-black px-2.5 py-1 rounded-xl shrink-0 ${brand.badgeBg} border ${brand.badgeBorder} shadow-sm flex items-center space-x-1.5 ${className}`}
+      className={`text-xs font-black px-3 py-1.5 rounded-xl shrink-0 ${brand.badgeBg} ${brand.badgeBorder} shadow-md flex items-center space-x-2 transition-transform active:scale-95 ${className}`}
     >
-      <div className="w-4 h-4 rounded-md overflow-hidden shrink-0 flex items-center justify-center bg-white/10 p-0.5">
-        <LogoComp className="w-3.5 h-3.5" />
+      <div className="w-5 h-5 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white p-0.5 shadow-sm border border-white">
+        <LogoComp className="w-4 h-4" />
       </div>
-      <span className={brand.badgeText}>{showFullName ? brand.fullName : brand.shortName}</span>
+      <span className={`tracking-wider ${brand.badgeText} text-xs font-black drop-shadow-xs`}>
+        {showFullName ? brand.fullName : brand.shortName}
+      </span>
     </span>
   );
 };
