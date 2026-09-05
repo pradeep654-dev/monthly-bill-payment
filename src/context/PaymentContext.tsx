@@ -271,24 +271,32 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const restorePermanentBackup = async () => {
       try {
-        const backupPayments = await loadFromPersistentStorage<PaymentItem[] | null>(STORAGE_KEY_PAYMENTS, null);
-        if (backupPayments && backupPayments.length > 0) {
-          setPayments(prev => (prev === INITIAL_PAYMENTS_SEPT_2026 ? backupPayments : prev));
+        if (!localStorage.getItem(STORAGE_KEY_PAYMENTS)) {
+          const backupPayments = await loadFromPersistentStorage<PaymentItem[] | null>(STORAGE_KEY_PAYMENTS, null);
+          if (backupPayments && backupPayments.length > 0) {
+            setPayments(backupPayments);
+          }
         }
 
-        const backupMethods = await loadFromPersistentStorage<PaymentMethod[] | null>(STORAGE_KEY_METHODS, null);
-        if (backupMethods && backupMethods.length > 0) {
-          setPaymentMethods(prev => (prev === DEFAULT_PAYMENT_METHODS ? backupMethods : prev));
+        if (!localStorage.getItem(STORAGE_KEY_METHODS)) {
+          const backupMethods = await loadFromPersistentStorage<PaymentMethod[] | null>(STORAGE_KEY_METHODS, null);
+          if (backupMethods && backupMethods.length > 0) {
+            setPaymentMethods(backupMethods);
+          }
         }
 
-        const backupTemplates = await loadFromPersistentStorage<PaymentTemplate[] | null>(STORAGE_KEY_TEMPLATES, null);
-        if (backupTemplates && backupTemplates.length > 0) {
-          setTemplates(prev => (prev === DEFAULT_TEMPLATES ? backupTemplates : prev));
+        if (!localStorage.getItem(STORAGE_KEY_TEMPLATES)) {
+          const backupTemplates = await loadFromPersistentStorage<PaymentTemplate[] | null>(STORAGE_KEY_TEMPLATES, null);
+          if (backupTemplates && backupTemplates.length > 0) {
+            setTemplates(backupTemplates);
+          }
         }
 
-        const backupBudgets = await loadFromPersistentStorage<CategoryBudgets | null>(STORAGE_KEY_BUDGETS, null);
-        if (backupBudgets) {
-          setCategoryBudgets(prev => ({ ...prev, ...backupBudgets }));
+        if (!localStorage.getItem(STORAGE_KEY_BUDGETS)) {
+          const backupBudgets = await loadFromPersistentStorage<CategoryBudgets | null>(STORAGE_KEY_BUDGETS, null);
+          if (backupBudgets) {
+            setCategoryBudgets(prev => ({ ...prev, ...backupBudgets }));
+          }
         }
       } catch (err) {
         console.warn('[PaymentContext] Backup restore error:', err);
@@ -921,7 +929,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       paidAmount,
       pendingAmount,
       percentagePaid,
-      totalCount: currentMonthPayments.length,
+      totalCount: activeItems.length,
       paidCount,
       totalSavings,
       totalExpense,
@@ -942,7 +950,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const allMonthSummaries: MonthSummary[] = useMemo(() => {
     const monthKeys = Array.from(new Set(payments.map(p => p.monthKey))).sort().reverse();
     return monthKeys.map(mKey => {
-      const monthItems = payments.filter(p => p.monthKey === mKey);
+      const monthItems = payments.filter(p => p.monthKey === mKey && !p.isSkipped);
       const totalAmount = monthItems.reduce((acc, p) => acc + p.amount, 0);
       const paidAmount = monthItems
         .filter(p => p.isPaid)

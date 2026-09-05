@@ -15,11 +15,13 @@ export const DashboardChartCard: React.FC = () => {
   const mandatoryPct = summary.totalAmount > 0 ? Math.round((summary.mandatoryTotal / summary.totalAmount) * 100) : 100;
   const discretionaryPct = 100 - mandatoryPct;
 
-  // Calculate top category spending
-  const categoryTotals = currentMonthPayments.reduce((acc, p) => {
-    acc[p.category] = (acc[p.category] || 0) + p.amount;
-    return acc;
-  }, {} as Record<CategoryType, number>);
+  // Calculate top category spending (active non-skipped items)
+  const categoryTotals = currentMonthPayments
+    .filter(p => !p.isSkipped)
+    .reduce((acc, p) => {
+      acc[p.category] = (acc[p.category] || 0) + p.amount;
+      return acc;
+    }, {} as Record<CategoryType, number>);
 
   const sortedCategories = (Object.keys(categoryTotals) as CategoryType[])
     .map(cat => ({
