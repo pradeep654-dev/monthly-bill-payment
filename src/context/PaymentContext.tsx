@@ -739,11 +739,12 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         ? Math.round((spentAmount / budgetAmount) * 100) 
         : (spentAmount > 0 ? 100 : 0);
 
+      const isSavingsOrInvestment = cat === 'savings' || cat === 'investment' || CATEGORY_MAP[cat]?.group === 'savings';
       let status: CategoryBudgetStatus = 'normal';
       if (budgetAmount > 0 && spentAmount >= budgetAmount) {
-        status = 'exceeded';
+        status = isSavingsOrInvestment ? 'completed' : 'exceeded';
       } else if (budgetAmount > 0 && spentAmount >= budgetAmount * 0.8) {
-        status = 'warning';
+        status = isSavingsOrInvestment ? 'normal' : 'warning';
       }
 
       const overAmount = Math.max(0, spentAmount - budgetAmount);

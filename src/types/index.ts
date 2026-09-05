@@ -114,7 +114,7 @@ export type UrgencyFilter = 'all' | 'savings' | 'commitments' | 'unpaid' | 'over
 
 export type CategoryBudgets = Record<CategoryType, number>;
 
-export type CategoryBudgetStatus = 'normal' | 'warning' | 'exceeded';
+export type CategoryBudgetStatus = 'normal' | 'warning' | 'exceeded' | 'completed';
 
 export interface CategoryBudgetSummary {
   category: CategoryType;

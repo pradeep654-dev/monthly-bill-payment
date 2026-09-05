@@ -171,7 +171,11 @@ export const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({ onOpenBu
                         </span>
                       </span>
 
-                      {item.status === 'exceeded' ? (
+                      {item.status === 'completed' ? (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-0.5 shrink-0">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Goal Complete! 🎯
+                        </span>
+                      ) : item.status === 'exceeded' ? (
                         <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60 flex items-center gap-0.5">
                           <AlertCircle className="w-3 h-3" /> Over!
                         </span>
@@ -191,7 +195,9 @@ export const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({ onOpenBu
                   <div className="w-full bg-slate-200/80 dark:bg-slate-800/80 h-2 rounded-full overflow-hidden p-0.5">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${
-                        item.status === 'exceeded'
+                        item.status === 'completed'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                          : item.status === 'exceeded'
                           ? 'bg-rose-500'
                           : item.status === 'warning'
                           ? 'bg-amber-500'

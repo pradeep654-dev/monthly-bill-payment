@@ -214,7 +214,11 @@ export const BudgetHealthView: React.FC<BudgetHealthViewProps> = ({ onOpenBudget
                       </span>
                     </div>
 
-                    {item.status === 'exceeded' ? (
+                    {item.status === 'completed' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Savings Goal Complete! 🎯 ({item.percentage}%)
+                      </span>
+                    ) : item.status === 'exceeded' ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600 dark:text-rose-400 mt-0.5">
                         <AlertCircle className="w-3 h-3" /> Exceeded by {formatCurrency(item.overAmount)}
                       </span>
@@ -234,7 +238,9 @@ export const BudgetHealthView: React.FC<BudgetHealthViewProps> = ({ onOpenBudget
                 <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
-                      item.status === 'exceeded'
+                      item.status === 'completed'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                        : item.status === 'exceeded'
                         ? 'bg-rose-500'
                         : item.status === 'warning'
                         ? 'bg-amber-500'
