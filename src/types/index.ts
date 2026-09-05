@@ -19,6 +19,20 @@ export type CategoryType =
 
 export type AccountType = 'bank' | 'wallet' | 'card' | 'cash';
 
+export interface BankTransaction {
+  id: string;
+  bankName: string;
+  accountEnding?: string;
+  type: 'debit' | 'credit';
+  amount: number;
+  newBalance?: number;
+  merchantOrVendor?: string;
+  category: CategoryType;
+  date: string; // ISO date or formatted
+  rawSms?: string;
+  referenceNo?: string;
+}
+
 export interface PaymentMethod {
   id: string;
   name: string;
@@ -27,6 +41,10 @@ export interface PaymentMethod {
   initialBalance: number;
   iconName?: string;
   color?: string;
+  lastSyncedAt?: string;
+  accountNumberEnding?: string;
+  accountNumber?: string;
+  ifscCode?: string;
 }
 
 export type CommitmentType = 'savings' | 'commitment';

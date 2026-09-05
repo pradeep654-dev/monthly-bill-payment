@@ -406,11 +406,6 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
           if (isPastMonth) {
             hasChanges = true;
-            if (item.paymentMethodId) {
-              setPaymentMethods(methods =>
-                methods.map(m => m.id === item.paymentMethodId ? { ...m, balance: Math.max(0, m.balance - item.amount) } : m)
-              );
-            }
             return { ...item, isPaid: true, paidAt: new Date().toISOString() };
           }
 
@@ -421,24 +416,21 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             if (isPastDueDay || isDueDayAtNight) {
               hasChanges = true;
               
-              setPaymentMethods(methods => {
-                const targetMethod = methods.find(m => m.id === item.paymentMethodId);
-                let chosenMethodId = item.paymentMethodId;
-
-                // Smart Reroute Bounce Prevention: if assigned account is short, reroute to account with highest balance
-                if (!targetMethod || targetMethod.balance < item.amount) {
-                  const solventMethod = methods.find(m => m.balance >= item.amount);
-                  if (solventMethod) {
-                    chosenMethodId = solventMethod.id;
-                  }
+              let chosenMethodId = item.paymentMethodId;
+              const targetMethod = paymentMethods.find(m => m.id === item.paymentMethodId);
+              if (!targetMethod || targetMethod.balance < item.amount) {
+                const solventMethod = paymentMethods.find(m => m.balance >= item.amount);
+                if (solventMethod) {
+                  chosenMethodId = solventMethod.id;
                 }
+              }
 
-                return methods.map(m =>
-                  m.id === chosenMethodId ? { ...m, balance: Math.max(0, m.balance - item.amount) } : m
-                );
-              });
-
-              return { ...item, isPaid: true, paidAt: new Date().toISOString() };
+              return { 
+                ...item, 
+                paymentMethodId: chosenMethodId, 
+                isPaid: true, 
+                paidAt: new Date().toISOString() 
+              };
             }
           }
 
@@ -452,7 +444,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     checkAutopayments();
     const interval = setInterval(checkAutopayments, 30000); // Check every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [paymentMethods]);
 
   // Month navigation helpers
   const goToNextMonth = () => {
@@ -859,8 +851,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Dynamically compute live bank balances deducting all paid savings and bills for each account
   const effectivePaymentMethods: PaymentMethod[] = useMemo(() => {
     return paymentMethods.map(method => {
-      // Sum of all paid items for this payment method in current month
-      const totalPaidForMethod = currentMonthPayments
+      // Sum of all paid items for this payment method across all recorded payments up to current month
+      const totalPaidForMethod = payments
         .filter(p => p.isPaid && !p.isSkipped && getEffectiveMethodId(p, paymentMethods) === method.id)
         .reduce((sum, p) => sum + p.amount, 0);
 
@@ -880,7 +872,7 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         balance: computedBalance
       };
     });
-  }, [paymentMethods, currentMonthPayments]);
+  }, [paymentMethods, payments]);
 
   // Total liquid bank balance across all payment methods
   const totalBankBalance = useMemo(() => {
@@ -914,7 +906,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const netFreeLiquidity = totalBankBalance - pendingAmount;
     const leftoverIncome = Math.max(0, monthlyIncome - totalAmount);
-    const survivalRunwayMonths = mandatoryTotal > 0 ? Number((totalBankBalance / mandatoryTotal).toFixed(1)) : 12;
+    const survivalRunwayMonths = totalBankBalance <= 0 
+      ? 0 
+      : (mandatoryTotal > 0 ? Number((totalBankBalance / mandatoryTotal).toFixed(1)) : 12);
 
     const hdfcSplitAmount = Math.round((monthlyIncome * salarySplitPercent) / 100);
     const sbiSplitAmount = monthlyIncome - hdfcSplitAmount;
@@ -971,7 +965,9 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const discretionaryTotal = totalAmount - mandatoryTotal;
       const netFreeLiquidity = totalBankBalance - pendingAmount;
       const leftoverIncome = Math.max(0, monthlyIncome - totalAmount);
-      const survivalRunwayMonths = mandatoryTotal > 0 ? Number((totalBankBalance / mandatoryTotal).toFixed(1)) : 12;
+      const survivalRunwayMonths = totalBankBalance <= 0 
+        ? 0 
+        : (mandatoryTotal > 0 ? Number((totalBankBalance / mandatoryTotal).toFixed(1)) : 12);
 
       const hdfcSplitAmount = Math.round((monthlyIncome * salarySplitPercent) / 100);
       const sbiSplitAmount = monthlyIncome - hdfcSplitAmount;

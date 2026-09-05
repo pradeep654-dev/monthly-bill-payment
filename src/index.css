@@ -29,15 +29,15 @@
 /* Ultra-Realistic 3D Liquid Glassmorphism (When Liquid Glass checkbox IS ENABLED) */
 .liquid-glass-mode .app-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.45) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
   backdrop-filter: blur(30px) saturate(210%) !important;
   -webkit-backdrop-filter: blur(30px) saturate(210%) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.4) !important;
   border-radius: 28px !important;
   box-shadow: 
-    0 20px 45px -12px rgba(30, 58, 138, 0.12),
+    0 20px 45px -12px rgba(30, 58, 138, 0.15),
     inset 0 2px 3px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -2px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    inset 0 -2px 3px 0 rgba(0, 0, 0, 0.08) !important;
 }
 
 .dark.liquid-glass-mode .app-card {

@@ -370,7 +370,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* UPI Handle Quick Converter Chips for 10-digit mobile numbers */}
               {/^[6-9]\d{9}$/.test(upiId.trim().replace(/\D/g, '')) && !upiId.includes('@') && (
-                <div className="mt-1.5 flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
+                <div className="mt-1.5 flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar touch-pan-x select-none whitespace-nowrap">
                   <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 shrink-0">Specific VPA:</span>
                   <button
                     type="button"
@@ -669,8 +669,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 } catch {
                   setContactHint('⚠️ Long press input to paste from Clipboard!');
                   setTimeout(() => setContactHint(''), 4000);
+                  const inputEl = document.getElementById('upi-phone-input');
+                  if (inputEl) {
+                    inputEl.focus();
+                  }
+                } finally {
+                  setIsContactSheetOpen(false);
                 }
-                setIsContactSheetOpen(false);
               }}
               className="w-full p-3 rounded-2xl bg-slate-100 dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs flex items-center justify-between hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-95"
             >

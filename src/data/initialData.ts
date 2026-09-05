@@ -10,7 +10,10 @@ export const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
     type: 'bank',
     balance: 40000,
     initialBalance: 40000,
-    color: 'cyan'
+    color: 'cyan',
+    accountNumber: '40928174321',
+    accountNumberEnding: '4321',
+    ifscCode: 'SBIN0001234'
   },
   {
     id: 'pm-1',
@@ -18,7 +21,10 @@ export const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
     type: 'bank',
     balance: 40000,
     initialBalance: 55000,
-    color: 'blue'
+    color: 'blue',
+    accountNumber: '5010098769012',
+    accountNumberEnding: '9012',
+    ifscCode: 'HDFC0000567'
   },
   {
     id: 'pm-2',
@@ -26,7 +32,9 @@ export const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
     type: 'wallet',
     balance: 11500,
     initialBalance: 15000,
-    color: 'emerald'
+    color: 'emerald',
+    accountNumber: '9876543210@paytm',
+    accountNumberEnding: 'paytm'
   }
 ];
 
