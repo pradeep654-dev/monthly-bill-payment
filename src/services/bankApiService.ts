@@ -58,8 +58,7 @@ export const apiCreateConsent = async (phoneNumber: string, bankId: string): Pro
   const fallbackConsentId = `consent-${Date.now()}-${bankId}`;
   return {
     success: true,
-    consentId: fallbackConsentId,
-    redirectUrl: `https://fiu-sandbox.setu.co/consents/${fallbackConsentId}`
+    consentId: fallbackConsentId
   };
 };
 
